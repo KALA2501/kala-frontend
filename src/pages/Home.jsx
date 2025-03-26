@@ -41,15 +41,16 @@ const Home = () => {
     }
 
     try {
-      await axios.post('http://localhost:8080/api/solicitudes-centros', formData);
-      setMensaje('✅ Solicitud enviada correctamente. Revisa tu correo para próximas instrucciones.');
+      // ⚠️ Aquí se corrigió la URL del endpoint
+      await axios.post('http://localhost:8080/api/solicitudes-centro-medico', formData);
+      setMensaje('✅ Centro médico registrado correctamente. Revisa tu correo.');
       setFormData({ nombre: '', direccion: '', correo: '', telefono: '' });
       setErrors({});
     } catch (error) {
       if (error.response?.status === 409) {
-        setMensaje('⚠️ Ya existe una solicitud o un centro con ese correo o teléfono.');
+        setMensaje('⚠️ Ya existe una solicitud con ese correo o teléfono.');
       } else {
-        setMensaje('❌ Error al enviar la solicitud. Intenta nuevamente más tarde.');
+        setMensaje('❌ Ocurrió un error al registrar. Intenta más tarde.');
       }
     }
   };
