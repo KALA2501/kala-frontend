@@ -17,7 +17,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       alert('Inicio de sesión exitoso');
-      navigate('/panel'); // Ruta del panel principal
+      navigate('/panel'); 
     } catch (err) {
       setError('Usuario o contraseña incorrectos');
     }
