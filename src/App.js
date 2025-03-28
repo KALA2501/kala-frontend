@@ -4,7 +4,6 @@ import Login from './pages/Login';
 import MainPanel from './pages/MainPanel'; 
 import Panel from './pages/Panel';
 import Home from './pages/Home';
-import AdminLogin from './pages/AdminLogin';
 import AdminPanel from './pages/AdminPanel';
 
 function App() {
@@ -13,7 +12,6 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
-        <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/admin-panel" element={<AdminPanel />} />
         <Route path="/main-panel" element={<MainPanel />} />
         <Route path="/panel" element={<Panel />} />

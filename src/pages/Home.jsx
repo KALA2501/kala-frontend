@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nombre: '',
     direccion: '',
@@ -57,7 +59,22 @@ const Home = () => {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Bienvenido a KALA</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+        <h1>Bienvenido a KALA</h1>
+        <button 
+          onClick={() => navigate('/login')}
+          style={{ 
+            padding: '0.5rem 1rem',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer'
+          }}
+        >
+          Iniciar Sesión
+        </button>
+      </div>
       <p>Plataforma para gestión de actividades cognitivas para adultos mayores.</p>
 
       <h2>Solicitar registro como Centro Médico</h2>
