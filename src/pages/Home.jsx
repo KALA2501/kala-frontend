@@ -43,7 +43,6 @@ const Home = () => {
     }
 
     try {
-      // ⚠️ Aquí se corrigió la URL del endpoint
       await axios.post('http://localhost:8080/api/solicitudes-centro-medico', formData);
       setMensaje('✅ Centro médico registrado correctamente. Revisa tu correo.');
       setFormData({ nombre: '', direccion: '', correo: '', telefono: '' });
