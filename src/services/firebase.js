@@ -1,4 +1,5 @@
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from './firebaseConfig';
 
 export const subirImagen = async (archivo, carpeta) => {
   try {
@@ -9,7 +10,6 @@ export const subirImagen = async (archivo, carpeta) => {
     const nombreArchivo = `${carpeta}/${Date.now()}.${extension}`;
     
     // Obtener la referencia de Firebase Storage
-    const storage = getStorage();
     const storageRef = ref(storage, nombreArchivo);
     
     // Subir el archivo

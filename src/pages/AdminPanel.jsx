@@ -50,7 +50,12 @@ const AdminPanel = () => {
   // Cargar usuarios de Firebase
   const cargarUsuarios = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/api/admin/usuarios-firebase');
+      const res = await axios.get('http://localhost:8080/api/admin/usuarios-firebase', {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: false
+      });
       console.log("🔥 RESPUESTA RAW:", res.data.usuariosPorRol);
 
       const raw = res.data.usuariosPorRol;
@@ -61,17 +66,6 @@ const AdminPanel = () => {
       });
     } catch (error) {
       console.error("❌ ERROR en /usuarios-firebase:", error);
-
-      if (error.response) {
-        console.log("📦 Error.response.data:", error.response.data);
-        console.log("📦 Status:", error.response.status);
-        console.log("📦 Headers:", error.response.headers);
-      } else if (error.request) {
-        console.log("📡 No hubo respuesta del servidor:", error.request);
-      } else {
-        console.log("⚠️ Error general:", error.message);
-      }
-
       setMensaje('❌ Error al cargar usuarios');
       setUsuarios({ centro_medico: [], doctor: [], paciente: [] });
     }
@@ -85,8 +79,11 @@ const AdminPanel = () => {
       const token = await user.getIdToken();
 
       const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico', {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true,
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: false
       });
       setSolicitudes(res.data);
     } catch (error) {
@@ -114,8 +111,11 @@ const AdminPanel = () => {
       await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`, 
         { rol },
         {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          withCredentials: false
         }
       );
       setSolicitudes(prev => prev.filter(s => s.id !== id));
@@ -133,8 +133,11 @@ const AdminPanel = () => {
     try {
       const token = await getAuth().currentUser.getIdToken();
       await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: false
       });
       setSolicitudes(prev => prev.filter(s => s.id !== id));
       setMensaje('✅ Solicitud eliminada');
@@ -149,7 +152,12 @@ const AdminPanel = () => {
     if (!window.confirm('¿Confirmas eliminar este usuario?')) return;
     
     try {
-      await axios.delete(`http://localhost:8080/api/admin/usuarios-firebase/${uid}`);
+      await axios.delete(`http://localhost:8080/api/admin/usuarios-firebase/${uid}`, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        withCredentials: false
+      });
       setMensaje('🗑️ Usuario eliminado');
       await cargarUsuarios();
     } catch (error) {
