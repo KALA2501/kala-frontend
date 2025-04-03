@@ -18,6 +18,7 @@ const AdminPanel = () => {
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState('');
   const [adminEmail, setAdminEmail] = useState('');
+  const [rolSeleccionado, setRolSeleccionado] = useState({});
 
   const navigate = useNavigate();
 
@@ -79,12 +80,20 @@ const AdminPanel = () => {
   // Cargar solicitudes
   const cargarSolicitudes = async () => {
     try {
-      const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico');
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico', {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
+      });
       setSolicitudes(res.data);
     } catch (error) {
       console.error('Error al cargar solicitudes:', error);
       setMensaje('❌ Error al cargar solicitudes');
-      setSolicitudes([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -94,36 +103,44 @@ const AdminPanel = () => {
   };
 
   // Procesar solicitud
-  const procesarSolicitud = async (id) => {
-    const rol = rolesSeleccionados[id];
+  const procesarSolicitud = async (id, rol) => {
     if (!rol) {
-      setMensaje("⚠️ Selecciona un rol antes de procesar");
+      setMensaje('❌ Por favor selecciona un rol para esta solicitud');
       return;
     }
 
     try {
-      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar?rol=${rol}`);
-      setMensaje('✅ Solicitud procesada exitosamente');
-      await cargarDatos();
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`, 
+        { rol },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
+        }
+      );
+      setSolicitudes(prev => prev.filter(s => s.id !== id));
+      setMensaje('✅ Solicitud procesada correctamente');
     } catch (error) {
-      console.error('Error al procesar:', error);
-      if (error.response?.data?.error === 'EMAIL_EXISTS') {
-        setMensaje('⚠️ El correo ya está registrado');
-      } else {
-        setMensaje('❌ Error al procesar la solicitud');
-      }
+      console.error(error);
+      setMensaje('❌ Error al procesar la solicitud');
     }
   };
 
-  // Revertir solicitud
-  const revertirSolicitud = async (id) => {
+  // Eliminar solicitud
+  const eliminarSolicitud = async (id) => {
+    if (!window.confirm('¿Seguro que quieres eliminar esta solicitud definitivamente?')) return;
+
     try {
-      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/revertir`);
-      setMensaje('🔄 Solicitud revertida');
-      await cargarDatos();
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      });
+      setSolicitudes(prev => prev.filter(s => s.id !== id));
+      setMensaje('✅ Solicitud eliminada');
     } catch (error) {
-      console.error('Error al revertir:', error);
-      setMensaje('❌ Error al revertir la solicitud');
+      console.error(error);
+      setMensaje('❌ Error al eliminar la solicitud');
     }
   };
 
@@ -231,6 +248,12 @@ const AdminPanel = () => {
       border: '1px solid #dee2e6',
       width: '200px',
     },
+    input: {
+      padding: '0.5rem',
+      borderRadius: '4px',
+      border: '1px solid #ddd',
+      marginRight: '0.5rem',
+    },
   };
 
   // Agregar justo antes del if(loading)
@@ -335,48 +358,45 @@ const AdminPanel = () => {
               <thead>
                 <tr>
                   <th style={styles.th}>Nombre</th>
-                  <th style={styles.th}>Email</th>
+                  <th style={styles.th}>Correo</th>
                   <th style={styles.th}>Teléfono</th>
                   <th style={styles.th}>Estado</th>
-                  <th style={styles.th}>Rol</th>
                   <th style={styles.th}>Acciones</th>
                 </tr>
               </thead>
               <tbody>
-                {solicitudes.map((s) => (
-                  <tr key={s.id}>
-                    <td style={styles.td}>{s.nombre}</td>
-                    <td style={styles.td}>{s.correo}</td>
-                    <td style={styles.td}>{s.telefono}</td>
-                    <td style={styles.td}>
-                      {s.procesado ? 'Procesado' : 'Pendiente'}
-                    </td>
+                {solicitudes.map((solicitud) => (
+                  <tr key={solicitud.id}>
+                    <td style={styles.td}>{solicitud.nombre}</td>
+                    <td style={styles.td}>{solicitud.correo}</td>
+                    <td style={styles.td}>{solicitud.telefono}</td>
+                    <td style={styles.td}>{solicitud.estado}</td>
                     <td style={styles.td}>
                       <select
-                        value={rolesSeleccionados[s.id] || ''}
-                        onChange={(e) => handleChangeRol(s.id, e.target.value)}
-                        style={styles.select}
-                        disabled={s.procesado}>
+                        value={rolSeleccionado[solicitud.id] || ''}
+                        onChange={(e) => setRolSeleccionado(prev => ({
+                          ...prev,
+                          [solicitud.id]: e.target.value
+                        }))}
+                        style={styles.input}
+                      >
                         <option value="">Seleccionar rol</option>
-                        <option value="centro_medico">Centro Médico</option>
-                        <option value="doctor">Doctor</option>
-                        <option value="paciente">Paciente</option>
+                        <option value="ADMIN">Administrador</option>
+                        <option value="MEDICO">Médico</option>
+                        <option value="PACIENTE">Paciente</option>
                       </select>
-                    </td>
-                    <td style={styles.td}>
-                      {!s.procesado ? (
-                        <button 
-                          onClick={() => procesarSolicitud(s.id)}
-                          style={styles.button()}>
-                          Procesar
-                        </button>
-                      ) : (
-                        <button 
-                          onClick={() => revertirSolicitud(s.id)}
-                          style={styles.button('#ff9800')}>
-                          Revertir
-                        </button>
-                      )}
+                      <button
+                        onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
+                        style={styles.button()}
+                      >
+                        Procesar
+                      </button>
+                      <button
+                        onClick={() => eliminarSolicitud(solicitud.id)}
+                        style={styles.button('#f44336')}
+                      >
+                        Eliminar
+                      </button>
                     </td>
                   </tr>
                 ))}

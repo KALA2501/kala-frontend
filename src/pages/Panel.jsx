@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { subirImagen } from '../services/firebase';
 
 const Panel = () => {
   // Estados principales
   const [medicos, setMedicos] = useState([]);
   const [pacientes, setPacientes] = useState([]);
+  const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState('');
   const [activeTab, setActiveTab] = useState('medicos');
+  const [centro, setCentro] = useState(null);
+  const [logo, setLogo] = useState('');
+  const [logoSubido, setLogoSubido] = useState(false);
+  const [rolSeleccionado, setRolSeleccionado] = useState({});
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -21,28 +27,74 @@ const Panel = () => {
     direccion: '',
     genero: '',
     tarjetaProfesional: '',
-    urlImagen: ''
+    urlLogo: ''
   });
   const [showForm, setShowForm] = useState(false);
 
   // Verificación de autenticación
   useEffect(() => {
     const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        cargarDatos();
+        const email = user.email;
+        const token = await user.getIdToken();
+
+        // Obtener info del centro
+        try {
+          const res = await axios.get(`http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true
+          });
+          const centroData = res.data;
+          setCentro(centroData);
+          const centroId = centroData.pkId;
+          localStorage.setItem('idCentro', centroId);
+          cargarDatos(centroId, token);
+        } catch (error) {
+          console.error('Error al obtener centro:', error);
+          setMensaje('❌ No se pudo identificar el centro médico');
+        }
       }
     });
     return () => unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const cargarSolicitudes = async () => {
+      if (activeTab === 'solicitudes') {
+        try {
+          const auth = getAuth();
+          const user = auth.currentUser;
+          const token = await user.getIdToken();
+
+          const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico', {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          });
+          setSolicitudes(res.data);
+        } catch (error) {
+          console.error('Error al cargar solicitudes:', error);
+          setMensaje('❌ Error al cargar solicitudes');
+        }
+      }
+    };
+
+    cargarSolicitudes();
+  }, [activeTab]);
+
   // Cargar datos
-  const cargarDatos = async () => {
+  const cargarDatos = async (idCentro, token) => {
     try {
       setLoading(true);
       const [medicosRes, pacientesRes] = await Promise.all([
-        axios.get('http://localhost:8080/api/medicos'),
-        axios.get('http://localhost:8080/api/pacientes')
+        axios.get(`http://localhost:8080/api/medicos/centro-medico/${idCentro}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
+        }),
+        axios.get(`http://localhost:8080/api/pacientes/centro-medico/${idCentro}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
+        })
       ]);
       setMedicos(medicosRes.data);
       setPacientes(pacientesRes.data);
@@ -62,11 +114,36 @@ const Panel = () => {
     });
   };
 
+  const handleLogoCentro = async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+    try {
+      const url = await subirImagen(archivo, 'centros-medicos');
+      setLogo(url);
+      setLogoSubido(true);
+      setFormData(prev => ({ ...prev, urlLogo: url }));
+    } catch (error) {
+      console.error("Error subiendo logo", error);
+      setMensaje("❌ Error al subir el logo");
+    }
+  };
+
   // Crear nuevo médico
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!logoSubido || !logo) {
+      setMensaje("❌ Debes subir el logo del centro antes de continuar");
+      return;
+    }
     try {
-      await axios.post('http://localhost:8080/api/medicos', formData);
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      await axios.post('http://localhost:8080/api/medicos', formData, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      });
       setMensaje('✅ Médico creado exitosamente');
       setShowForm(false);
       setFormData({
@@ -81,9 +158,12 @@ const Panel = () => {
         direccion: '',
         genero: '',
         tarjetaProfesional: '',
-        urlImagen: ''
+        urlLogo: ''
       });
-      cargarDatos();
+      setLogo('');
+      setLogoSubido(false);
+      const idCentro = localStorage.getItem('idCentro');
+      cargarDatos(idCentro, token);
     } catch (error) {
       setMensaje('❌ Error al crear el médico');
     }
@@ -93,11 +173,92 @@ const Panel = () => {
   const eliminarMedico = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar este médico?')) return;
     try {
-      await axios.delete(`http://localhost:8080/api/medicos/${id}`);
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      });
       setMensaje('✅ Médico eliminado exitosamente');
-      cargarDatos();
+      const idCentro = localStorage.getItem('idCentro');
+      cargarDatos(idCentro, token);
     } catch (error) {
       setMensaje('❌ Error al eliminar el médico');
+    }
+  };
+
+  const handleLogoChange = async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+
+    try {
+      const urlNueva = await subirImagen(archivo, 'centros-medicos');
+      if (!urlNueva) {
+        setMensaje('❌ Error al subir nueva imagen');
+        return;
+      }
+
+      const auth = getAuth();
+      const user = auth.currentUser;
+      const token = await user.getIdToken();
+
+      // Actualiza el centro con la nueva URL
+      const updatedCentro = { ...centro, urlLogo: urlNueva };
+      await axios.put(`http://localhost:8080/api/centro-medico/${centro.pkId}`, updatedCentro, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      });
+
+      setCentro(updatedCentro);
+      setLogoSubido(true);
+      setMensaje('✅ Logo actualizado correctamente');
+    } catch (error) {
+      console.error(error);
+      setMensaje('❌ No se pudo actualizar el logo');
+    }
+  };
+
+  const eliminarSolicitud = async (id) => {
+    if (!window.confirm('¿Seguro que quieres eliminar esta solicitud definitivamente?')) return;
+
+    try {
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true
+      });
+      setSolicitudes(prev => prev.filter(s => s.id !== id));
+      setMensaje('✅ Solicitud eliminada');
+    } catch (error) {
+      console.error(error);
+      setMensaje('❌ Error al eliminar la solicitud');
+    }
+  };
+
+  const procesarSolicitud = async (id, rol) => {
+    if (!rol) {
+      setMensaje('❌ Por favor selecciona un rol para esta solicitud');
+      return;
+    }
+
+    try {
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`, 
+        { rol },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          withCredentials: true
+        }
+      );
+      setSolicitudes(prev => prev.filter(s => s.id !== id));
+      setMensaje('✅ Solicitud procesada correctamente');
+    } catch (error) {
+      console.error(error);
+      setMensaje('❌ Error al procesar la solicitud');
     }
   };
 
@@ -182,6 +343,30 @@ const Panel = () => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
+        {centro?.urlLogo && (
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+            <img
+              src={centro.urlLogo}
+              alt="Logo del Centro Médico"
+              onClick={() => document.getElementById('input-logo').click()}
+              style={{
+                maxWidth: '150px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                transition: 'opacity 0.3s',
+                boxShadow: '0 0 10px rgba(0,0,0,0.1)'
+              }}
+              title="Haz clic para cambiar el logo"
+            />
+          </div>
+        )}
+        <input
+          type="file"
+          accept="image/*"
+          id="input-logo"
+          style={{ display: 'none' }}
+          onChange={handleLogoChange}
+        />
         <h1>Panel del Centro Médico</h1>
         <button 
           onClick={() => setShowForm(!showForm)}
@@ -253,6 +438,19 @@ const Panel = () => {
             style={styles.input}
           />
           <input
+            type="file"
+            accept="image/*"
+            onChange={handleLogoCentro}
+            style={styles.input}
+          />
+          {logo && (
+            <img
+              src={logo}
+              alt="Logo del centro"
+              style={{ maxWidth: '100px', marginTop: '0.5rem', borderRadius: '8px' }}
+            />
+          )}
+          <input
             name="direccion"
             placeholder="Dirección"
             value={formData.direccion}
@@ -277,13 +475,6 @@ const Panel = () => {
             onChange={handleChange}
             style={styles.input}
           />
-          <input
-            name="urlImagen"
-            placeholder="URL de la imagen"
-            value={formData.urlImagen}
-            onChange={handleChange}
-            style={styles.input}
-          />
           <button type="submit" style={styles.button()}>
             Registrar Médico
           </button>
@@ -302,6 +493,12 @@ const Panel = () => {
           style={styles.tab(activeTab === 'pacientes')}
         >
           Pacientes
+        </button>
+        <button 
+          onClick={() => setActiveTab('solicitudes')}
+          style={styles.tab(activeTab === 'solicitudes')}
+        >
+          Solicitudes
         </button>
       </div>
 
@@ -333,7 +530,7 @@ const Panel = () => {
             ))}
           </tbody>
         </table>
-      ) : (
+      ) : activeTab === 'pacientes' ? (
         <table style={styles.table}>
           <thead>
             <tr>
@@ -351,6 +548,55 @@ const Panel = () => {
                 <td style={styles.td}>{paciente.telefono}</td>
                 <td style={styles.td}>
                   {paciente.medicos?.map(m => `${m.nombre} ${m.apellido}`).join(', ') || 'Sin médicos asignados'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : (
+        <table style={styles.table}>
+          <thead>
+            <tr>
+              <th style={styles.th}>Nombre</th>
+              <th style={styles.th}>Correo</th>
+              <th style={styles.th}>Teléfono</th>
+              <th style={styles.th}>Estado</th>
+              <th style={styles.th}>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {solicitudes.map((solicitud) => (
+              <tr key={solicitud.id}>
+                <td style={styles.td}>{solicitud.nombre}</td>
+                <td style={styles.td}>{solicitud.correo}</td>
+                <td style={styles.td}>{solicitud.telefono}</td>
+                <td style={styles.td}>{solicitud.estado}</td>
+                <td style={styles.td}>
+                  <select
+                    value={rolSeleccionado[solicitud.id] || ''}
+                    onChange={(e) => setRolSeleccionado(prev => ({
+                      ...prev,
+                      [solicitud.id]: e.target.value
+                    }))}
+                    style={styles.input}
+                  >
+                    <option value="">Seleccionar rol</option>
+                    <option value="ADMIN">Administrador</option>
+                    <option value="MEDICO">Médico</option>
+                    <option value="PACIENTE">Paciente</option>
+                  </select>
+                  <button
+                    onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
+                    style={styles.button()}
+                  >
+                    Procesar
+                  </button>
+                  <button
+                    onClick={() => eliminarSolicitud(solicitud.id)}
+                    style={styles.button('#f44336')}
+                  >
+                    Eliminar
+                  </button>
                 </td>
               </tr>
             ))}

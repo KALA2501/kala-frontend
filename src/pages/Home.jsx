@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
+import { subirImagen } from '../services/firebase';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -8,17 +9,38 @@ const Home = () => {
     nombre: '',
     direccion: '',
     correo: '',
-    telefono: ''
+    telefono: '',
+    urlLogo: ''
   });
 
   const [errors, setErrors] = useState({});
   const [mensaje, setMensaje] = useState('');
+  const [subiendoLogo, setSubiendoLogo] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleLogoUpload = async (e) => {
+    const archivo = e.target.files[0];
+    if (!archivo) return;
+
+    setSubiendoLogo(true);
+    setMensaje('Subiendo logo...');
+
+    try {
+      const url = await subirImagen(archivo, 'centros-medicos');
+      setFormData({ ...formData, urlLogo: url });
+      setMensaje('✅ Logo subido correctamente');
+    } catch (error) {
+      console.error('Error al subir logo', error);
+      setMensaje('❌ Error al subir el logo del centro médico');
+    } finally {
+      setSubiendoLogo(false);
+    }
   };
 
   const validar = () => {
@@ -31,6 +53,7 @@ const Home = () => {
       newErrors.correo = 'Correo inválido';
     }
     if (!formData.telefono) newErrors.telefono = 'Teléfono requerido';
+    if (!formData.urlLogo) newErrors.urlLogo = 'Debes subir el logo del centro';
     return newErrors;
   };
 
@@ -45,7 +68,13 @@ const Home = () => {
     try {
       await axios.post('http://localhost:8080/api/solicitudes-centro-medico', formData);
       setMensaje('✅ Centro médico registrado correctamente. Revisa tu correo.');
-      setFormData({ nombre: '', direccion: '', correo: '', telefono: '' });
+      setFormData({
+        nombre: '',
+        direccion: '',
+        correo: '',
+        telefono: '',
+        urlLogo: ''
+      });
       setErrors({});
     } catch (error) {
       if (error.response?.status === 409) {
@@ -118,7 +147,26 @@ const Home = () => {
         {errors.telefono && <div style={{ color: 'red' }}>{errors.telefono}</div>}
         <br />
 
-        <button type="submit">Enviar solicitud</button>
+        <input
+          type="file"
+          accept="image/*"
+          onChange={handleLogoUpload}
+        />
+        {errors.urlLogo && <div style={{ color: 'red' }}>{errors.urlLogo}</div>}
+        {formData.urlLogo && (
+          <div>
+            <img
+              src={formData.urlLogo}
+              alt="Logo subido"
+              style={{ maxWidth: '120px', marginTop: '1rem', borderRadius: '8px' }}
+            />
+          </div>
+        )}
+        <br />
+
+        <button type="submit" disabled={subiendoLogo}>
+          {subiendoLogo ? 'Subiendo imagen...' : 'Enviar solicitud'}
+        </button>
       </form>
     </div>
   );
