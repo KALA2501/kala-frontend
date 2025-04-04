@@ -181,6 +181,24 @@ const AdminPanel = () => {
     }
   };
 
+  // Revertir solicitud
+  const revertirSolicitud = async (id) => {
+    try {
+      const token = await getAuth().currentUser.getIdToken();
+      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/revertir`, null, {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        }
+      });
+      await cargarSolicitudes(); // refresca después de revertir
+      setMensaje('🔁 Solicitud revertida correctamente');
+    } catch (error) {
+      console.error('Error al revertir solicitud:', error);
+      setMensaje('❌ Error al revertir solicitud');
+    }
+  };
+
   // Estilos
   const styles = {
     container: {
@@ -384,26 +402,37 @@ const AdminPanel = () => {
                     <td style={styles.td}>{solicitud.telefono}</td>
                     <td style={styles.td}>{solicitud.estado}</td>
                     <td style={styles.td}>
-                      <select
-                        value={rolSeleccionado[solicitud.id] || ''}
-                        onChange={(e) => setRolSeleccionado(prev => ({
-                          ...prev,
-                          [solicitud.id]: e.target.value
-                        }))}
-                        style={styles.input}
-                      >
-                        <option value="">Seleccionar rol</option>
-                        <option value="ADMINISTRADOR">Administrador</option>
-                        <option value="CENTRO_MEDICO">Centro Médico</option>
-                        <option value="MEDICO">Médico</option>
-                        <option value="PACIENTE">Paciente</option>
-                      </select>
-                      <button
-                        onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
-                        style={styles.button()}
-                      >
-                        Procesar
-                      </button>
+                      {!solicitud.procesado ? (
+                        <>
+                          <select
+                            value={rolSeleccionado[solicitud.id] || ''}
+                            onChange={(e) => setRolSeleccionado(prev => ({
+                              ...prev,
+                              [solicitud.id]: e.target.value
+                            }))}
+                            style={styles.input}
+                          >
+                            <option value="">Seleccionar rol</option>
+                            <option value="ADMINISTRADOR">Administrador</option>
+                            <option value="CENTRO_MEDICO">Centro Médico</option>
+                            <option value="MEDICO">Médico</option>
+                            <option value="PACIENTE">Paciente</option>
+                          </select>
+                          <button
+                            onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
+                            style={styles.button()}
+                          >
+                            Procesar
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => revertirSolicitud(solicitud.id)}
+                          style={styles.button('#ff9800')}
+                        >
+                          Revertir
+                        </button>
+                      )}
                       <button
                         onClick={() => eliminarSolicitud(solicitud.id)}
                         style={styles.button('#f44336')}
