@@ -107,21 +107,25 @@ const AdminPanel = () => {
     }
 
     try {
+      console.log('Procesando solicitud con rol:', rol);
       const token = await getAuth().currentUser.getIdToken();
-      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`, 
-        { rol },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          withCredentials: false
-        }
-      );
+    await axios.put(
+      `http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`,
+      null, 
+      {
+        params: { rol }, 
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        withCredentials: false
+      }
+    );
+
       setSolicitudes(prev => prev.filter(s => s.id !== id));
       setMensaje('✅ Solicitud procesada correctamente');
     } catch (error) {
-      console.error(error);
+      console.error('🔥 AxiosError en procesarSolicitud:', error);
       setMensaje('❌ Error al procesar la solicitud');
     }
   };
@@ -389,7 +393,8 @@ const AdminPanel = () => {
                         style={styles.input}
                       >
                         <option value="">Seleccionar rol</option>
-                        <option value="ADMIN">Administrador</option>
+                        <option value="ADMINISTRADOR">Administrador</option>
+                        <option value="CENTRO_MEDICO">Centro Médico</option>
                         <option value="MEDICO">Médico</option>
                         <option value="PACIENTE">Paciente</option>
                       </select>

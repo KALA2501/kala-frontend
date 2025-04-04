@@ -16,6 +16,7 @@ const Home = () => {
   const [errors, setErrors] = useState({});
   const [mensaje, setMensaje] = useState('');
   const [subiendoLogo, setSubiendoLogo] = useState(false);
+  const [archivoLogo, setArchivoLogo] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -24,23 +25,12 @@ const Home = () => {
     });
   };
 
-  const handleLogoUpload = async (e) => {
+  const handleLogoUpload = (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
 
-    setSubiendoLogo(true);
-    setMensaje('Subiendo logo...');
-
-    try {
-      const url = await subirImagen(archivo, 'centros-medicos');
-      setFormData({ ...formData, urlLogo: url });
-      setMensaje('✅ Logo subido correctamente');
-    } catch (error) {
-      console.error('Error al subir logo', error);
-      setMensaje('❌ Error al subir el logo del centro médico');
-    } finally {
-      setSubiendoLogo(false);
-    }
+    setArchivoLogo(archivo);
+    setMensaje('✅ Imagen seleccionada. Se subirá cuando envíes la solicitud.');
   };
 
   const validar = () => {
@@ -53,7 +43,7 @@ const Home = () => {
       newErrors.correo = 'Correo inválido';
     }
     if (!formData.telefono) newErrors.telefono = 'Teléfono requerido';
-    if (!formData.urlLogo) newErrors.urlLogo = 'Debes subir el logo del centro';
+    if (!archivoLogo && !formData.urlLogo) newErrors.urlLogo = 'Debes subir el logo del centro';
     return newErrors;
   };
 
@@ -66,7 +56,19 @@ const Home = () => {
     }
 
     try {
-      await axios.post('http://localhost:8080/api/solicitudes-centro-medico', formData);
+      setSubiendoLogo(true);
+      let urlLogoFinal = formData.urlLogo;
+
+      // Subir imagen si hay archivo seleccionado y aún no se ha subido
+      if (archivoLogo && !urlLogoFinal) {
+        urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
+      }
+
+      await axios.post('http://localhost:8080/api/solicitudes-centro-medico', {
+        ...formData,
+        urlLogo: urlLogoFinal,
+      });
+
       setMensaje('✅ Centro médico registrado correctamente. Revisa tu correo.');
       setFormData({
         nombre: '',
@@ -75,13 +77,17 @@ const Home = () => {
         telefono: '',
         urlLogo: ''
       });
+      setArchivoLogo(null);
       setErrors({});
     } catch (error) {
+      console.error(error);
       if (error.response?.status === 409) {
         setMensaje('⚠️ Ya existe una solicitud con ese correo o teléfono.');
       } else {
         setMensaje('❌ Ocurrió un error al registrar. Intenta más tarde.');
       }
+    } finally {
+      setSubiendoLogo(false);
     }
   };
 
@@ -153,11 +159,11 @@ const Home = () => {
           onChange={handleLogoUpload}
         />
         {errors.urlLogo && <div style={{ color: 'red' }}>{errors.urlLogo}</div>}
-        {formData.urlLogo && (
+        {archivoLogo && (
           <div>
             <img
-              src={formData.urlLogo}
-              alt="Logo subido"
+              src={URL.createObjectURL(archivoLogo)}
+              alt="Vista previa"
               style={{ maxWidth: '120px', marginTop: '1rem', borderRadius: '8px' }}
             />
           </div>
