@@ -15,16 +15,18 @@ const Panel = () => {
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
-    tipoDocumento: '',
+    tipoDocumento: 'CC',
     idDocumento: '',
     fechaNacimiento: '',
-    profesion: '',
-    especialidad: '',
+    profesion: 'Médico',
+    especialidad: 'General',
+    especialidadCustom: '',
     telefono: '',
     direccion: '',
     genero: '',
     tarjetaProfesional: '',
-    urlLogo: ''
+    urlLogo: '',
+    correo: ''
   });
   const [showForm, setShowForm] = useState(false);
 
@@ -80,10 +82,20 @@ const Panel = () => {
   };
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    const { name, value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleEspecialidadChange = (e) => {
+    const { value } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      especialidad: value,
+      especialidadCustom: value === 'Otra' ? prev.especialidadCustom : ''
+    }));
   };
 
   const handleLogoCentro = async (e) => {
@@ -110,28 +122,55 @@ const Panel = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       const token = await user.getIdToken();
-      await axios.post('http://localhost:8080/api/medicos', formData, {
+
+      let especialidadFinal = formData.especialidad;
+      if (especialidadFinal === 'Otra' && formData.especialidadCustom.trim() !== '') {
+        especialidadFinal = formData.especialidadCustom.trim();
+      }
+
+      const medicoAEnviar = {
+        nombre: formData.nombre,
+        apellido: formData.apellido,
+        tipoDocumento: { id: formData.tipoDocumento },
+        idDocumento: formData.idDocumento,
+        fechaNacimiento: formData.fechaNacimiento,
+        profesion: 'Médico',
+        especialidad: especialidadFinal,
+        telefono: formData.telefono,
+        direccion: formData.direccion,
+        genero: formData.genero,
+        tarjetaProfesional: formData.tarjetaProfesional,
+        urlImagen: logo,
+        correo: formData.correo,
+        centroMedico: { pkId: centro.pkId }
+      };
+
+      await axios.post('http://localhost:8080/api/medicos', medicoAEnviar, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
       });
+
       setMensaje('✅ Médico creado exitosamente');
       setShowForm(false);
       setFormData({
         nombre: '',
         apellido: '',
-        tipoDocumento: '',
+        tipoDocumento: 'CC',
         idDocumento: '',
         fechaNacimiento: '',
-        profesion: '',
-        especialidad: '',
+        profesion: 'Médico',
+        especialidad: 'General',
+        especialidadCustom: '',
         telefono: '',
         direccion: '',
         genero: '',
         tarjetaProfesional: '',
-        urlLogo: ''
+        urlLogo: '',
+        correo: ''
       });
       setLogo('');
       setLogoSubido(false);
+
       const idCentro = localStorage.getItem('idCentro');
       cargarDatos(idCentro, token);
     } catch (error) {
@@ -145,6 +184,7 @@ const Panel = () => {
       const auth = getAuth();
       const user = auth.currentUser;
       const token = await user.getIdToken();
+
       await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
@@ -317,13 +357,17 @@ const Panel = () => {
             onChange={handleChange}
             style={styles.input}
           />
-          <input
+          <select
             name="tipoDocumento"
-            placeholder="Tipo de Documento"
             value={formData.tipoDocumento}
             onChange={handleChange}
             style={styles.input}
-          />
+          >
+            <option value="CC">Cédula de Ciudadanía (CC)</option>
+            <option value="TI">Tarjeta de Identidad (TI)</option>
+            <option value="CE">Cédula de Extranjería (CE)</option>
+            <option value="PAS">Pasaporte (PAS)</option>
+          </select>
           <input
             name="idDocumento"
             placeholder="Número de Documento"
@@ -339,19 +383,34 @@ const Panel = () => {
             style={styles.input}
           />
           <input
+            type="text"
             name="profesion"
-            placeholder="Profesión"
-            value={formData.profesion}
-            onChange={handleChange}
+            value="Médico"
+            readOnly
             style={styles.input}
           />
-          <input
+          <select
             name="especialidad"
-            placeholder="Especialidad"
             value={formData.especialidad}
-            onChange={handleChange}
+            onChange={handleEspecialidadChange}
             style={styles.input}
-          />
+          >
+          <option value="Geriatría">Geriatría (Adulto mayor)</option>
+          <option value="Neurología">Neurología (Enfermedades del sistema nervioso)</option>
+          <option value="Psiquiatría">Psiquiatría (Salud mental)</option>
+          <option value="Neuropsicología">Neuropsicología (Evaluación y rehabilitación cognitiva)</option>
+          <option value="Neurogeriatría">Neurogeriatría (Geriatría y neurología combinadas)</option>
+          <option value="Otra">Otra</option>
+          </select>
+          {formData.especialidad === 'Otra' && (
+            <input
+              name="especialidadCustom"
+              placeholder="Escribe la especialidad"
+              value={formData.especialidadCustom}
+              onChange={handleChange}
+              style={styles.input}
+            />
+          )}
           <input
             name="telefono"
             placeholder="Teléfono"
@@ -397,6 +456,15 @@ const Panel = () => {
             onChange={handleChange}
             style={styles.input}
           />
+          <input
+            name="correo"
+            placeholder="Correo Electrónico"
+            type="email"
+            value={formData.correo}
+            onChange={handleChange}
+            style={styles.input}
+          />
+
           <button type="submit" style={styles.button()}>
             Registrar Médico
           </button>
