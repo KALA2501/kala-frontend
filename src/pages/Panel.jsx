@@ -4,17 +4,14 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { subirImagen } from '../services/firebase';
 
 const Panel = () => {
-  // Estados principales
   const [medicos, setMedicos] = useState([]);
   const [pacientes, setPacientes] = useState([]);
-  const [solicitudes, setSolicitudes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mensaje, setMensaje] = useState('');
   const [activeTab, setActiveTab] = useState('medicos');
   const [centro, setCentro] = useState(null);
   const [logo, setLogo] = useState('');
   const [logoSubido, setLogoSubido] = useState(false);
-  const [rolSeleccionado, setRolSeleccionado] = useState({});
   const [formData, setFormData] = useState({
     nombre: '',
     apellido: '',
@@ -31,20 +28,20 @@ const Panel = () => {
   });
   const [showForm, setShowForm] = useState(false);
 
-  // Verificación de autenticación
   useEffect(() => {
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const email = user.email;
         const token = await user.getIdToken();
-
-        // Obtener info del centro
         try {
-          const res = await axios.get(`http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`, {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true
-          });
+          const res = await axios.get(
+            `http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+              withCredentials: true
+            }
+          );
           const centroData = res.data;
           setCentro(centroData);
           const centroId = centroData.pkId;
@@ -59,30 +56,6 @@ const Panel = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const cargarSolicitudes = async () => {
-      if (activeTab === 'solicitudes') {
-        try {
-          const auth = getAuth();
-          const user = auth.currentUser;
-          const token = await user.getIdToken();
-
-          const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico', {
-            headers: { Authorization: `Bearer ${token}` },
-            withCredentials: true,
-          });
-          setSolicitudes(res.data);
-        } catch (error) {
-          console.error('Error al cargar solicitudes:', error);
-          setMensaje('❌ Error al cargar solicitudes');
-        }
-      }
-    };
-
-    cargarSolicitudes();
-  }, [activeTab]);
-
-  // Cargar datos
   const cargarDatos = async (idCentro, token) => {
     try {
       setLoading(true);
@@ -106,7 +79,6 @@ const Panel = () => {
     }
   };
 
-  // Manejar cambios en el formulario
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -121,25 +93,23 @@ const Panel = () => {
       const url = await subirImagen(archivo, 'centros-medicos');
       setLogo(url);
       setLogoSubido(true);
-      setFormData(prev => ({ ...prev, urlLogo: url }));
+      setFormData((prev) => ({ ...prev, urlLogo: url }));
     } catch (error) {
-      console.error("Error subiendo logo", error);
-      setMensaje("❌ Error al subir el logo");
+      console.error('Error subiendo logo', error);
+      setMensaje('❌ Error al subir el logo');
     }
   };
 
-  // Crear nuevo médico
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!logoSubido || !logo) {
-      setMensaje("❌ Debes subir el logo del centro antes de continuar");
+      setMensaje('❌ Debes subir el logo del centro antes de continuar');
       return;
     }
     try {
       const auth = getAuth();
       const user = auth.currentUser;
       const token = await user.getIdToken();
-
       await axios.post('http://localhost:8080/api/medicos', formData, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
@@ -169,14 +139,12 @@ const Panel = () => {
     }
   };
 
-  // Eliminar médico
   const eliminarMedico = async (id) => {
     if (!window.confirm('¿Estás seguro de eliminar este médico?')) return;
     try {
       const auth = getAuth();
       const user = auth.currentUser;
       const token = await user.getIdToken();
-
       await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true
@@ -192,27 +160,22 @@ const Panel = () => {
   const handleLogoChange = async (e) => {
     const archivo = e.target.files[0];
     if (!archivo) return;
-
     try {
       const urlNueva = await subirImagen(archivo, 'centros-medicos');
       if (!urlNueva) {
         setMensaje('❌ Error al subir nueva imagen');
         return;
       }
-
       const auth = getAuth();
       const user = auth.currentUser;
       const token = await user.getIdToken();
-
-      // Actualiza el centro con la nueva URL
       const updatedCentro = { ...centro, urlLogo: urlNueva };
       await axios.put(`http://localhost:8080/api/centro-medico/${centro.pkId}`, updatedCentro, {
         headers: {
           Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+          'Content-Type': 'application/json'
+        }
       });
-
       setCentro(updatedCentro);
       setLogoSubido(true);
       setMensaje('✅ Logo actualizado correctamente');
@@ -222,63 +185,22 @@ const Panel = () => {
     }
   };
 
-  const eliminarSolicitud = async (id) => {
-    if (!window.confirm('¿Seguro que quieres eliminar esta solicitud definitivamente?')) return;
-
-    try {
-      const token = await getAuth().currentUser.getIdToken();
-      await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-        withCredentials: true
-      });
-      setSolicitudes(prev => prev.filter(s => s.id !== id));
-      setMensaje('✅ Solicitud eliminada');
-    } catch (error) {
-      console.error(error);
-      setMensaje('❌ Error al eliminar la solicitud');
-    }
-  };
-
-  const procesarSolicitud = async (id, rol) => {
-    if (!rol) {
-      setMensaje('❌ Por favor selecciona un rol para esta solicitud');
-      return;
-    }
-
-    try {
-      const token = await getAuth().currentUser.getIdToken();
-      await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`, 
-        { rol },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-          withCredentials: true
-        }
-      );
-      setSolicitudes(prev => prev.filter(s => s.id !== id));
-      setMensaje('✅ Solicitud procesada correctamente');
-    } catch (error) {
-      console.error(error);
-      setMensaje('❌ Error al procesar la solicitud');
-    }
-  };
-
-  // Estilos
   const styles = {
     container: {
       padding: '2rem',
       maxWidth: '1200px',
-      margin: '0 auto',
+      margin: '0 auto'
     },
     header: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
-      marginBottom: '2rem',
+      marginBottom: '2rem'
     },
     tabs: {
       display: 'flex',
       gap: '1rem',
-      marginBottom: '2rem',
+      marginBottom: '2rem'
     },
     tab: (isActive) => ({
       padding: '0.75rem 1.5rem',
@@ -287,22 +209,22 @@ const Panel = () => {
       border: 'none',
       borderRadius: '4px',
       cursor: 'pointer',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     }),
     table: {
       width: '100%',
       borderCollapse: 'collapse',
-      marginTop: '1rem',
+      marginTop: '1rem'
     },
     th: {
       textAlign: 'left',
       padding: '1rem',
       backgroundColor: '#f5f5f5',
-      borderBottom: '2px solid #ddd',
+      borderBottom: '2px solid #ddd'
     },
     td: {
       padding: '1rem',
-      borderBottom: '1px solid #ddd',
+      borderBottom: '1px solid #ddd'
     },
     form: {
       display: 'grid',
@@ -312,12 +234,12 @@ const Panel = () => {
       padding: '2rem',
       backgroundColor: 'white',
       borderRadius: '8px',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
     },
     input: {
       padding: '0.5rem',
       borderRadius: '4px',
-      border: '1px solid #ddd',
+      border: '1px solid #ddd'
     },
     button: (color = '#4CAF50') => ({
       padding: '0.5rem 1rem',
@@ -325,15 +247,15 @@ const Panel = () => {
       color: 'white',
       border: 'none',
       borderRadius: '4px',
-      cursor: 'pointer',
+      cursor: 'pointer'
     }),
     mensaje: {
       padding: '1rem',
       marginBottom: '1rem',
       borderRadius: '4px',
       backgroundColor: mensaje.includes('❌') ? '#ffebee' : '#e8f5e9',
-      color: mensaje.includes('❌') ? '#c62828' : '#2e7d32',
-    },
+      color: mensaje.includes('❌') ? '#c62828' : '#2e7d32'
+    }
   };
 
   if (loading) {
@@ -343,14 +265,14 @@ const Panel = () => {
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        {centro?.urlLogo && (
-          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+        <div>
+          {centro?.urlLogo && (
             <img
               src={centro.urlLogo}
               alt="Logo del Centro Médico"
               onClick={() => document.getElementById('input-logo').click()}
               style={{
-                maxWidth: '150px',
+                maxWidth: '130px',
                 borderRadius: '8px',
                 cursor: 'pointer',
                 transition: 'opacity 0.3s',
@@ -358,20 +280,20 @@ const Panel = () => {
               }}
               title="Haz clic para cambiar el logo"
             />
-          </div>
-        )}
-        <input
-          type="file"
-          accept="image/*"
-          id="input-logo"
-          style={{ display: 'none' }}
-          onChange={handleLogoChange}
-        />
-        <h1>Panel del Centro Médico</h1>
-        <button 
-          onClick={() => setShowForm(!showForm)}
-          style={styles.button()}
-        >
+          )}
+          <input
+            type="file"
+            accept="image/*"
+            id="input-logo"
+            style={{ display: 'none' }}
+            onChange={handleLogoChange}
+          />
+        </div>
+        <div style={{ marginLeft: '1rem' }}>
+          <h1 style={{ margin: 0 }}>Panel del Centro Médico</h1>
+          {centro?.nombre && <h2 style={{ margin: 0, fontWeight: 'normal' }}>{centro.nombre}</h2>}
+        </div>
+        <button onClick={() => setShowForm(!showForm)} style={styles.button()}>
           {showForm ? 'Cancelar' : 'Agregar Médico'}
         </button>
       </div>
@@ -482,23 +404,17 @@ const Panel = () => {
       )}
 
       <div style={styles.tabs}>
-        <button 
+        <button
           onClick={() => setActiveTab('medicos')}
           style={styles.tab(activeTab === 'medicos')}
         >
           Médicos
         </button>
-        <button 
+        <button
           onClick={() => setActiveTab('pacientes')}
           style={styles.tab(activeTab === 'pacientes')}
         >
           Pacientes
-        </button>
-        <button 
-          onClick={() => setActiveTab('solicitudes')}
-          style={styles.tab(activeTab === 'solicitudes')}
-        >
-          Solicitudes
         </button>
       </div>
 
@@ -530,7 +446,7 @@ const Panel = () => {
             ))}
           </tbody>
         </table>
-      ) : activeTab === 'pacientes' ? (
+      ) : (
         <table style={styles.table}>
           <thead>
             <tr>
@@ -547,56 +463,8 @@ const Panel = () => {
                 <td style={styles.td}>{paciente.idDocumento}</td>
                 <td style={styles.td}>{paciente.telefono}</td>
                 <td style={styles.td}>
-                  {paciente.medicos?.map(m => `${m.nombre} ${m.apellido}`).join(', ') || 'Sin médicos asignados'}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <table style={styles.table}>
-          <thead>
-            <tr>
-              <th style={styles.th}>Nombre</th>
-              <th style={styles.th}>Correo</th>
-              <th style={styles.th}>Teléfono</th>
-              <th style={styles.th}>Estado</th>
-              <th style={styles.th}>Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {solicitudes.map((solicitud) => (
-              <tr key={solicitud.id}>
-                <td style={styles.td}>{solicitud.nombre}</td>
-                <td style={styles.td}>{solicitud.correo}</td>
-                <td style={styles.td}>{solicitud.telefono}</td>
-                <td style={styles.td}>{solicitud.estado}</td>
-                <td style={styles.td}>
-                  <select
-                    value={rolSeleccionado[solicitud.id] || ''}
-                    onChange={(e) => setRolSeleccionado(prev => ({
-                      ...prev,
-                      [solicitud.id]: e.target.value
-                    }))}
-                    style={styles.input}
-                  >
-                    <option value="">Seleccionar rol</option>
-                    <option value="ADMIN">Administrador</option>
-                    <option value="MEDICO">Médico</option>
-                    <option value="PACIENTE">Paciente</option>
-                  </select>
-                  <button
-                    onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
-                    style={styles.button()}
-                  >
-                    Procesar
-                  </button>
-                  <button
-                    onClick={() => eliminarSolicitud(solicitud.id)}
-                    style={styles.button('#f44336')}
-                  >
-                    Eliminar
-                  </button>
+                  {paciente.medicos?.map((m) => `${m.nombre} ${m.apellido}`).join(', ') ||
+                    'Sin médicos asignados'}
                 </td>
               </tr>
             ))}
