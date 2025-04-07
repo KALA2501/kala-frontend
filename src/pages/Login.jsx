@@ -16,19 +16,29 @@ const Login = () => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
-
-      // Redirigir según el tipo de usuario
+  
+      const token = await user.getIdTokenResult(); 
+      const role = token.claims.role;
+  
+      // ✅ Redirección según rol
       if (user.email === 'admin@kala.com') {
         navigate('/admin-panel');
+      } else if (role === 'centro_medico') {
+        navigate('/Panel');
+      } else if (role === 'medico') {
+        navigate('/medico-panel');
+      } else if (role === 'paciente') {
+        navigate('/PacientePanel');
       } else {
-        // Aquí podrías agregar más lógica para determinar el tipo de usuario
-        // Por ejemplo, consultando una base de datos
-        navigate('/panel');
+        setError('Rol no reconocido. Contacta al administrador.');
       }
+  
     } catch (err) {
+      console.error(err);
       setError('Usuario o contraseña incorrectos');
     }
   };
+  
 
   const handleResetPassword = async () => {
     try {
