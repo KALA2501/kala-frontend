@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { subirImagen } from '../../services/firebase';
+import { subirImagen } from '../../../services/firebase';
 
 const RegisterPatientPage = () => {
     const [formData, setFormData] = useState({
