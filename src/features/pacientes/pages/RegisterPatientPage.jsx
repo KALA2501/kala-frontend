@@ -53,6 +53,7 @@ const RegisterPatientPage = () => {
         try {
             const auth = getAuth();
             const token = await auth.currentUser.getIdToken();
+            console.log(token); // Verificar si el token aparece en la consola antes de la petición
 
             let urlImagen = '';
             if (imagenSeleccionada) {

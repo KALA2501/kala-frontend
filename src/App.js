@@ -1,10 +1,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Login from './pages/Login';
-import MainPanel from './pages/MainPanel';
-import Panel from './pages/Panel';
-import Home from './pages/Home';
-import AdminPanel from './pages/AdminPanel';
+import Login from './features/auth/pages/LoginPage';
+import MainPanel from './features/panel/pages/CentroMedicoPanelPage';
+import Home from './features/home/pages/HomePage';
+import AdminPanel from './features/admin/pages/AdminPanelPage';
 import DoctorPanelPage from './features/medicos/pages/DoctorPanelPage';
 import RegisterPatientPage from './features/pacientes/pages/RegisterPatientPage';
 
@@ -16,7 +15,6 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/admin-panel" element={<AdminPanel />} />
         <Route path="/main-panel" element={<MainPanel />} />
-        <Route path="/panel" element={<Panel />} />
         <Route path="/medico-panel" element={<DoctorPanelPage />} />
         <Route path="/register-patient" element={<RegisterPatientPage />} />
       </Routes>

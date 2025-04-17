@@ -50,11 +50,15 @@ const AdminPanelPage = () => {
     // Cargar usuarios de Firebase
     const cargarUsuarios = async () => {
         try {
+            const auth = getAuth();
+            const user = auth.currentUser;
+            const token = await user.getIdToken();
+
             const res = await axios.get('http://localhost:8080/api/admin/usuarios-firebase', {
                 headers: {
-                    'Content-Type': 'application/json'
-                },
-                withCredentials: false
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
             });
             console.log("🔥 RESPUESTA RAW:", res.data.usuariosPorRol);
 
@@ -82,8 +86,7 @@ const AdminPanelPage = () => {
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
-                },
-                withCredentials: false
+                }
             });
             setSolicitudes(res.data);
         } catch (error) {
@@ -117,8 +120,7 @@ const AdminPanelPage = () => {
                     headers: {
                         'Content-Type': 'application/json',
                         Authorization: `Bearer ${token}`
-                    },
-                    withCredentials: false
+                    }
                 }
             );
 
@@ -140,8 +142,7 @@ const AdminPanelPage = () => {
                 headers: {
                     'Content-Type': 'application/json',
                     Authorization: `Bearer ${token}`
-                },
-                withCredentials: false
+                }
             });
             setSolicitudes(prev => prev.filter(s => s.id !== id));
             setMensaje('✅ Solicitud eliminada');
@@ -159,8 +160,7 @@ const AdminPanelPage = () => {
             await axios.delete(`http://localhost:8080/api/admin/usuarios-firebase/${uid}`, {
                 headers: {
                     'Content-Type': 'application/json'
-                },
-                withCredentials: false
+                }
             });
             setMensaje('🗑️ Usuario eliminado');
             await cargarUsuarios();
@@ -451,4 +451,4 @@ const AdminPanelPage = () => {
     );
 };
 
-export default AdminPanelPage; 
+export default AdminPanelPage;

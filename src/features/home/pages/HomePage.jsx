@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { subirImagen } from '../services/firebase';
+import { subirImagen } from '../../../services/firebase';
+import { getAuth } from 'firebase/auth';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -64,9 +65,19 @@ const HomePage = () => {
                 urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
             }
 
+            const auth = getAuth();
+            const user = auth.currentUser;
+            const token = await user.getIdToken();
+            console.log(token); // Verificar si el token aparece en la consola antes de la petición
+
             await axios.post('http://localhost:8080/api/solicitudes-centro-medico', {
                 ...formData,
                 urlLogo: urlLogoFinal,
+            }, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             setMensaje('✅ Centro médico registrado correctamente. Revisa tu correo.');

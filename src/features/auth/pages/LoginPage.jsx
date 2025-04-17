@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from '../services/firebaseConfig';
+import { auth } from '../../../services/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
@@ -19,6 +19,7 @@ const LoginPage = () => {
 
             const token = await user.getIdTokenResult();
             const role = token.claims.role;
+            console.log(token); // Verificar si el token aparece en la consola antes de la redirección
 
             // ✅ Redirección según rol
             if (user.email === 'admin@kala.com') {

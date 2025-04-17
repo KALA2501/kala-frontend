@@ -12,8 +12,15 @@ const DoctorPanelPage = () => {
             if (user) {
                 const email = user.email;
                 try {
+                    const token = await user.getIdToken();
+                    console.log(token); // Verificar si el token aparece en la consola antes de la petición
                     const res = await axios.get(
-                        `http://localhost:8080/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`
+                        `http://localhost:8080/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`
+                            }
+                        }
                     );
                     console.log("📦 Respuesta completa:", res.data);
                     const doctorData = res.data;
@@ -27,7 +34,6 @@ const DoctorPanelPage = () => {
         });
         return () => unsubscribe();
     }, []);
-
 
 
 

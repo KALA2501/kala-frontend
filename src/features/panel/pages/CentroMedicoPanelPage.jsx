@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { subirImagen } from '../services/firebase';
+import { subirImagen } from '../../../services/firebase';
 
 const CentroMedicoPanelPage = () => {
     const [medicos, setMedicos] = useState([]);
@@ -36,12 +36,12 @@ const CentroMedicoPanelPage = () => {
             if (user) {
                 const email = user.email;
                 const token = await user.getIdToken();
+                console.log(token); // Verificar si el token aparece en la consola antes de la petición
                 try {
                     const res = await axios.get(
                         `http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
                         {
-                            headers: { Authorization: `Bearer ${token}` },
-                            withCredentials: true
+                            headers: { Authorization: `Bearer ${token}` }
                         }
                     );
                     const centroData = res.data;
@@ -65,12 +65,10 @@ const CentroMedicoPanelPage = () => {
             setLoading(true);
             const [medicosRes, pacientesRes] = await Promise.all([
                 axios.get(`http://localhost:8080/api/medicos/centro-medico/${idCentro}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true
+                    headers: { Authorization: `Bearer ${token}` }
                 }),
                 axios.get(`http://localhost:8080/api/pacientes/centro-medico/${idCentro}`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                    withCredentials: true
+                    headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
             setMedicos(medicosRes.data);
@@ -159,8 +157,7 @@ const CentroMedicoPanelPage = () => {
             };
 
             await axios.post('http://localhost:8080/api/medicos', medicoAEnviar, {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             setMensaje('✅ Médico creado exitosamente');
@@ -199,8 +196,7 @@ const CentroMedicoPanelPage = () => {
             }
             const token = await user.getIdToken();
             const res = await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                withCredentials: true
+                headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje(`✅ ${res.data}`);
             const idCentro = localStorage.getItem('idCentro');
