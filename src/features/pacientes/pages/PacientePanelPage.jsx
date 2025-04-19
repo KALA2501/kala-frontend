@@ -6,9 +6,11 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 const PacientePanelPage = () => {
     const navigate = useNavigate();
     const [pacienteImage, setPacienteImage] = useState('');
-    const [pacientes, setPacientes] = useState([]);
+    const [pacienteNombre, setPacienteNombre] = useState('');
+    const [medicos, setMedicos] = useState([]);
     const [pacienteId, setPacienteId] = useState('');
 
+    // Cuando se detecte un usuario autenticado en Firebase
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -16,29 +18,109 @@ const PacientePanelPage = () => {
                 const email = user.email;
                 try {
                     const token = await user.getIdToken();
-                    console.log(token); // Verificar si el token aparece en la consola antes de la petición
+                    console.log("🔑 Token JWT:", token); // Imprimir el token JWT para depuración
+
+                    if (!token || token.split('.').length !== 3) {
+                        throw new Error("Token JWT inválido o malformado");
+                    }
+
+                    // Obtener los detalles del paciente
                     const res = await axios.get(
-                        `http://localhost:8080/api/pacientes/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        `http://localhost:8080/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                             },
                         }
                     );
-                    console.log("📦 Respuesta completa:", res.data);
                     const pacienteData = res.data;
                     setPacienteImage(pacienteData.urlImagen);
-                    setPacienteId(pacienteData.pkId); // Guardamos el ID del paciente
+                    setPacienteNombre(pacienteData.nombre);
+                    setPacienteId(pacienteData.pkId);
+
+                    // Obtener médicos vinculados al paciente
+                    const medicosRes = await axios.get(
+                        `http://localhost:8080/api/pacientes/${pacienteData.pkId}/medicos`,
+                        {
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                            },
+                        }
+                    );
+                    setMedicos(medicosRes.data);
                 } catch (error) {
-                    console.error('❌ Error al obtener los detalles del paciente:', error);
+                    if (error.message.includes("Token JWT inválido")) {
+                        console.error("❌ Error: El token JWT es inválido o malformado.");
+                    } else if (error.response) {
+                        console.error(`❌ Error ${error.response.status}:`, error.response.data);
+                    } else if (error.request) {
+                        console.error('❌ Error en la solicitud:', error.request);
+                    } else {
+                        console.error('❌ Error desconocido:', error.message);
+                    }
                 }
             } else {
                 console.error('❌ Usuario no autenticado');
             }
         });
+
         return () => unsubscribe();
     }, []);
 
+    // Cerrar sesión
+    const handleLogout = () => {
+        const auth = getAuth();
+        auth.signOut()
+            .then(() => {
+                console.log("Sesión cerrada");
+                navigate("/login"); // Redirigir a la página de login
+            })
+            .catch((error) => {
+                console.error('Error al cerrar sesión:', error);
+            });
+    };
+
+    return (
+        <div style={{ padding: '2rem', textAlign: 'center' }}>
+            <h1>Bienvenido al Panel del Paciente</h1>
+
+            {/* Foto del paciente */}
+            {pacienteImage && <img src={pacienteImage} alt="Paciente" style={{ width: '150px', borderRadius: '50%' }} />}
+
+            {/* Nombre del paciente */}
+            <h2>{pacienteNombre}</h2>
+
+            {/* Lista de médicos */}
+            <h3>Lista de Médicos Vinculados</h3>
+            {medicos.length > 0 ? (
+                <ul>
+                    {medicos.map((medico) => (
+                        <li key={medico.pkId}>
+                            {medico.nombre} {medico.apellido} - Especialidad: {medico.especialidad}
+                        </li>
+                    ))}
+                </ul>
+            ) : (
+                <p>No tienes médicos vinculados.</p>
+            )}
+
+            {/* Botón de cerrar sesión */}
+            <button
+                style={{
+                    marginTop: '1rem',
+                    padding: '0.5rem 1rem',
+                    fontSize: '1rem',
+                    backgroundColor: 'red',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '5px',
+                }}
+                onClick={handleLogout}
+            >
+                Cerrar sesión
+            </button>
+        </div>
+    );
 };
 
 export default PacientePanelPage;
