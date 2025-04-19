@@ -6,6 +6,7 @@ import Home from './features/home/pages/HomePage';
 import AdminPanel from './features/admin/pages/AdminPanelPage';
 import DoctorPanelPage from './features/medicos/pages/DoctorPanelPage';
 import RegisterPatientPage from './features/pacientes/pages/RegisterPatientPage';
+import PacientePanelPage from './features/pacientes/pages/PacientePanelPage';
 
 function App() {
   return (
@@ -17,6 +18,8 @@ function App() {
         <Route path="/main-panel" element={<MainPanel />} />
         <Route path="/medico-panel" element={<DoctorPanelPage />} />
         <Route path="/register-patient" element={<RegisterPatientPage />} />
+        <Route path="/paciente-panel" element={<PacientePanelPage />} />
+
       </Routes>
     </Router>
   );
