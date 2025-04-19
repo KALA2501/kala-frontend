@@ -8,12 +8,17 @@ const RegisterPatientPage = () => {
     const [formData, setFormData] = useState({
         nombre: '', apellido: '', tipoDocumento: 'CC', idDocumento: '',
         fechaNacimiento: '', codigoCIE: '', telefono: '', email: '',
-        direccion: '', etapa: 1, zona: '', distrito: '', genero: '', urlImagen: '',
-        password: ''
+        direccion: '', etapa: 1, zona: '', distrito: '', genero: '', urlImagen: '', tipoVinculacion: ''
     });
     const [mensaje, setMensaje] = useState('');
     const [medico, setMedico] = useState(null);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
+    const [tiposVinculacion, setTiposVinculacion] = useState([
+        { pkId: 1, nombre: 'Atendido' },
+        { pkId: 2, nombre: 'Referido' },
+        { pkId: 3, nombre: 'Control permanente' },
+        { pkId: 4, nombre: 'Temporal' }
+    ]);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -66,7 +71,9 @@ const RegisterPatientPage = () => {
                 etapa: parseInt(formData.etapa),
                 tipoDocumento: formData.tipoDocumento,
                 centroMedico: medico.centroMedico.pkId,
-                urlImagen
+                urlImagen,
+                password: 'paciente123', // Contraseña temporal asignada automáticamente
+                tipoVinculacionId: formData.tipoVinculacion
             };
 
             await axios.post('http://localhost:8080/api/pacientes/registrar-completo', payload, {
@@ -74,7 +81,6 @@ const RegisterPatientPage = () => {
             });
 
             setMensaje('✅ Paciente registrado exitosamente');
-            setTimeout(() => navigate('/medico'), 2000);
         } catch (error) {
             console.error(error);
             setMensaje(`❌ Error: ${error.response?.data || 'No se pudo registrar el paciente'}`);
@@ -100,7 +106,6 @@ const RegisterPatientPage = () => {
                 <input name="codigoCIE" placeholder="Código CIE" value={formData.codigoCIE} onChange={handleChange} />
                 <input name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} required />
                 <input name="email" placeholder="Correo Electrónico" type="email" value={formData.email} onChange={handleChange} required />
-                <input name="password" placeholder="Contraseña temporal" type="password" value={formData.password} onChange={handleChange} required />
                 <input name="direccion" placeholder="Dirección" value={formData.direccion} onChange={handleChange} />
                 <input name="etapa" placeholder="Etapa" type="number" value={formData.etapa} onChange={handleChange} />
                 <input name="zona" placeholder="Zona" value={formData.zona} onChange={handleChange} />
@@ -112,6 +117,13 @@ const RegisterPatientPage = () => {
                     <option value="O">Otro</option>
                 </select>
 
+                <select name="tipoVinculacion" value={formData.tipoVinculacion} onChange={handleChange} required>
+                    <option value="">Seleccionar tipo de vinculación</option>
+                    {tiposVinculacion.map((tipo) => (
+                        <option key={tipo.pkId} value={tipo.pkId}>{tipo.nombre}</option>
+                    ))}
+                </select>
+
                 <label><strong>Foto del paciente:</strong></label>
                 <input type="file" accept="image/*" onChange={handleImagen} />
 
@@ -119,6 +131,10 @@ const RegisterPatientPage = () => {
                     Registrar Paciente
                 </button>
             </form>
+
+            <button onClick={() => navigate('/medico-panel')} style={{ marginTop: '1rem', backgroundColor: '#f44336', color: 'white', padding: '0.75rem', border: 'none', borderRadius: '6px' }}>
+                Volver al Panel de Médicos
+            </button>
         </div>
     );
 };

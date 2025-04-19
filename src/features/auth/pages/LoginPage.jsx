@@ -29,7 +29,7 @@ const LoginPage = () => {
             } else if (role === 'medico') {
                 navigate('/medico-panel');
             } else if (role === 'paciente') {
-                navigate('/PacientePanel');
+                navigate('/paciente-panel');
             } else {
                 setError('Rol no reconocido. Contacta al administrador.');
             }
