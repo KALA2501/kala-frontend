@@ -25,16 +25,25 @@ const RegisterPatientPage = () => {
         const auth = getAuth();
         onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const token = await user.getIdToken();
+                const token = await user.getIdTokenResult();
                 const correo = user.email;
-                try {
-                    const res = await axios.get(
-                        `http://localhost:8080/api/medicos/buscar-por-correo?correo=${correo}`,
-                        { headers: { Authorization: `Bearer ${token}` } }
-                    );
-                    setMedico(res.data);
-                } catch (err) {
-                    console.error('Error buscando médico:', err);
+                const rol = token.claims.rol; // Obtener el rol del token
+
+                if (rol === 'medico') {
+                    try {
+                        const res = await axios.get(
+                            `http://localhost:8080/api/medicos/buscar-por-correo?correo=${correo}`,
+                            { headers: { Authorization: `Bearer ${token.token}` } }
+                        );
+                        setMedico(res.data);
+                    } catch (err) {
+                        console.error('Error buscando médico:', err);
+                        navigate('/');
+                    }
+                } else if (rol === 'paciente') {
+                    console.log('El usuario autenticado es un paciente.');
+                } else {
+                    console.error('Rol no reconocido:', rol);
                     navigate('/');
                 }
             } else {
@@ -73,7 +82,8 @@ const RegisterPatientPage = () => {
                 centroMedico: medico.centroMedico.pkId,
                 urlImagen,
                 password: 'paciente123', // Contraseña temporal asignada automáticamente
-                tipoVinculacionId: formData.tipoVinculacion
+                tipoVinculacionId: formData.tipoVinculacion,
+                rol: 'paciente'
             };
 
             await axios.post('http://localhost:8080/api/pacientes/registrar-completo', payload, {

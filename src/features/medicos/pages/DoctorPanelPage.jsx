@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
 const DoctorPanelPage = () => {
     const navigate = useNavigate();
@@ -95,6 +95,16 @@ const DoctorPanelPage = () => {
         }
     };
 
+    const handleLogout = async () => {
+        const auth = getAuth();
+        try {
+            await signOut(auth);
+            navigate('/'); // Redirigir al homepage
+        } catch (error) {
+            console.error('Error al cerrar sesión:', error);
+        }
+    };
+
     return (
         <div style={{ padding: '2rem', textAlign: 'center' }}>
             <h1>Bienvenido al panel del médico</h1>
@@ -115,6 +125,12 @@ const DoctorPanelPage = () => {
                     </li>
                 ))}
             </ul>
+            <button
+                style={{ marginTop: '1rem', padding: '0.5rem 1rem', fontSize: '1rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '5px' }}
+                onClick={handleLogout}
+            >
+                Cerrar Sesión
+            </button>
         </div>
     );
 };

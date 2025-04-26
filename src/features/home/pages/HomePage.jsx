@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { subirImagen } from '../../../services/firebase';
-import { getAuth } from 'firebase/auth';
+import { getAuth, signInAnonymously } from 'firebase/auth';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -60,16 +60,21 @@ const HomePage = () => {
             setSubiendoLogo(true);
             let urlLogoFinal = formData.urlLogo;
 
+            // Verificar si el usuario está autenticado anónimamente
+            const auth = getAuth();
+            if (!auth.currentUser) {
+                await signInAnonymously(auth); // Autenticación anónima si no hay usuario autenticado
+            }
+
+            const token = await auth.currentUser.getIdToken();
+            console.log("Token JWT:", token); // Asegúrate de que el token se imprima en la consola
+
             // Subir imagen si hay archivo seleccionado y aún no se ha subido
             if (archivoLogo && !urlLogoFinal) {
                 urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
             }
 
-            const auth = getAuth();
-            const user = auth.currentUser;
-            const token = await user.getIdToken();
-            console.log(token); // Verificar si el token aparece en la consola antes de la petición
-
+            // Enviar la solicitud con el token en los encabezados
             await axios.post('http://localhost:8080/api/solicitudes-centro-medico', {
                 ...formData,
                 urlLogo: urlLogoFinal,

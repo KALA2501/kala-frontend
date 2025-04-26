@@ -33,10 +33,12 @@ const CentroMedicoPanelPage = () => {
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
+            console.log("📥 useEffect ejecutado");
+            console.log("Usuario autenticado:", user);
             if (user) {
                 const email = user.email;
                 const token = await user.getIdToken();
-                console.log(token); // Verificar si el token aparece en la consola antes de la petición
+                console.log("Token obtenido:", token); // Mover después de definir 'token'
                 try {
                     const res = await axios.get(
                         `http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
@@ -47,6 +49,8 @@ const CentroMedicoPanelPage = () => {
                     const centroData = res.data;
                     setCentro(centroData);
                     const centroId = centroData.pkId;
+                    console.log("Centro médico obtenido:", centroData);
+                    console.log("ID del centro médico:", centroId);
                     localStorage.setItem('idCentro', centroId);
                     cargarDatos(centroId, token);
                 } catch (error) {
@@ -63,6 +67,9 @@ const CentroMedicoPanelPage = () => {
     const cargarDatos = async (idCentro, token) => {
         try {
             setLoading(true);
+            console.log("📤 Cargando datos para el centro ID:", idCentro);
+            console.log("Token utilizado:", token);
+
             const [medicosRes, pacientesRes] = await Promise.all([
                 axios.get(`http://localhost:8080/api/medicos/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -71,6 +78,11 @@ const CentroMedicoPanelPage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
+
+            // Logs para verificar los datos recibidos
+            console.log("Respuesta de médicos:", medicosRes.data);
+            console.log("Respuesta de pacientes:", pacientesRes.data);
+
             setMedicos(medicosRes.data);
             setPacientes(pacientesRes.data);
         } catch (error) {
@@ -156,6 +168,8 @@ const CentroMedicoPanelPage = () => {
                 centroMedico: { pkId: centro.pkId }
             };
 
+            console.log('Datos enviados al backend:', medicoAEnviar); // Depuración para verificar el contenido del objeto
+
             await axios.post('http://localhost:8080/api/medicos', medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -173,7 +187,8 @@ const CentroMedicoPanelPage = () => {
             const idCentro = localStorage.getItem('idCentro');
             cargarDatos(idCentro, token);
         } catch (error) {
-            setMensaje('❌ Error al crear el médico');
+            console.error('Error al crear el médico:', error.response?.data || error.message); // Capturar respuesta del backend
+            setMensaje(`❌ ${error.response?.data || 'Error al crear el médico'}`);
         }
     };
 
