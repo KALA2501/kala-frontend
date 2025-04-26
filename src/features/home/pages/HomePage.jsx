@@ -1,8 +1,15 @@
+// features/home/pages/HomePage.jsx
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { subirImagen } from '../../../services/firebase';
 import { getAuth, signInAnonymously } from 'firebase/auth';
+import axios from 'axios';
+import HeroSection from './HeroSection';
+import AboutSection from './AboutSection';
+import MissionSection from './MissionSection';
+import BenefitsSection from './BenefitsSection';
+import FormularioSection from './FormularioSection';
+import Footer from './Footer';
 
 const HomePage = () => {
     const navigate = useNavigate();
@@ -60,21 +67,17 @@ const HomePage = () => {
             setSubiendoLogo(true);
             let urlLogoFinal = formData.urlLogo;
 
-            // Verificar si el usuario está autenticado anónimamente
             const auth = getAuth();
             if (!auth.currentUser) {
-                await signInAnonymously(auth); // Autenticación anónima si no hay usuario autenticado
+                await signInAnonymously(auth);
             }
 
             const token = await auth.currentUser.getIdToken();
-            console.log("Token JWT:", token); // Asegúrate de que el token se imprima en la consola
 
-            // Subir imagen si hay archivo seleccionado y aún no se ha subido
             if (archivoLogo && !urlLogoFinal) {
                 urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
             }
 
-            // Enviar la solicitud con el token en los encabezados
             await axios.post('http://localhost:8080/api/solicitudes-centro-medico', {
                 ...formData,
                 urlLogo: urlLogoFinal,
@@ -108,88 +111,22 @@ const HomePage = () => {
     };
 
     return (
-        <div style={{ padding: '2rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <h1>Bienvenido a KALA</h1>
-                <button
-                    onClick={() => navigate('/login')}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#4CAF50',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Iniciar Sesión
-                </button>
-            </div>
-            <p>Plataforma para gestión de actividades cognitivas para adultos mayores.</p>
-
-            <h2>Solicitar registro como Centro Médico</h2>
-            {mensaje && <p style={{ color: mensaje.startsWith('✅') ? 'green' : 'red' }}>{mensaje}</p>}
-
-            <form onSubmit={handleSubmit}>
-                <input
-                    name="nombre"
-                    placeholder="Nombre del centro"
-                    value={formData.nombre}
-                    onChange={handleChange}
-                />
-                {errors.nombre && <div style={{ color: 'red' }}>{errors.nombre}</div>}
-                <br />
-
-                <input
-                    name="direccion"
-                    placeholder="Dirección"
-                    value={formData.direccion}
-                    onChange={handleChange}
-                />
-                {errors.direccion && <div style={{ color: 'red' }}>{errors.direccion}</div>}
-                <br />
-
-                <input
-                    type="email"
-                    name="correo"
-                    placeholder="Correo electrónico"
-                    value={formData.correo}
-                    onChange={handleChange}
-                />
-                {errors.correo && <div style={{ color: 'red' }}>{errors.correo}</div>}
-                <br />
-
-                <input
-                    type="tel"
-                    name="telefono"
-                    placeholder="Teléfono"
-                    value={formData.telefono}
-                    onChange={handleChange}
-                />
-                {errors.telefono && <div style={{ color: 'red' }}>{errors.telefono}</div>}
-                <br />
-
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleLogoUpload}
-                />
-                {errors.urlLogo && <div style={{ color: 'red' }}>{errors.urlLogo}</div>}
-                {archivoLogo && (
-                    <div>
-                        <img
-                            src={URL.createObjectURL(archivoLogo)}
-                            alt="Vista previa"
-                            style={{ maxWidth: '120px', marginTop: '1rem', borderRadius: '8px' }}
-                        />
-                    </div>
-                )}
-                <br />
-
-                <button type="submit" disabled={subiendoLogo}>
-                    {subiendoLogo ? 'Subiendo imagen...' : 'Enviar solicitud'}
-                </button>
-            </form>
+        <div className="flex flex-col min-h-screen">
+            <HeroSection />
+            <AboutSection />
+            <MissionSection />
+            <BenefitsSection />
+            <FormularioSection
+                formData={formData}
+                errors={errors}
+                mensaje={mensaje}
+                subiendoLogo={subiendoLogo}
+                archivoLogo={archivoLogo}
+                handleChange={handleChange}
+                handleLogoUpload={handleLogoUpload}
+                handleSubmit={handleSubmit}
+            />
+            <Footer />
         </div>
     );
 };

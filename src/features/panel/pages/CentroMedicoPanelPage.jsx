@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { subirImagen } from '../../../services/firebase';
+
+import CentroMedicoNavbar from '../components/CentroMedicoNavbar';
+import CentroMedicoFooter from '../components/CentroMedicoFooter';
+import CentroMedicoTabs from '../components/CentroMedicoTabs';
+import CentroMedicoTableMedicos from '../components/CentroMedicoTableMedicos';
+import CentroMedicoTablePacientes from '../components/CentroMedicoTablePacientes';
+import CentroMedicoFormMedico from '../components/CentroMedicoFormMedico';
+import { subirImagen } from '../../../services/firebase'; // Asegúrate de que el import esté bien
 
 const CentroMedicoPanelPage = () => {
     const [medicos, setMedicos] = useState([]);
@@ -12,6 +19,8 @@ const CentroMedicoPanelPage = () => {
     const [centro, setCentro] = useState(null);
     const [logo, setLogo] = useState('');
     const [logoSubido, setLogoSubido] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+
     const [formData, setFormData] = useState({
         nombre: '',
         apellido: '',
@@ -28,29 +37,21 @@ const CentroMedicoPanelPage = () => {
         urlLogo: '',
         correo: ''
     });
-    const [showForm, setShowForm] = useState(false);
 
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            console.log("📥 useEffect ejecutado");
-            console.log("Usuario autenticado:", user);
             if (user) {
                 const email = user.email;
                 const token = await user.getIdToken();
-                console.log("Token obtenido:", token); // Mover después de definir 'token'
                 try {
                     const res = await axios.get(
                         `http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
-                        {
-                            headers: { Authorization: `Bearer ${token}` }
-                        }
+                        { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const centroData = res.data;
                     setCentro(centroData);
                     const centroId = centroData.pkId;
-                    console.log("Centro médico obtenido:", centroData);
-                    console.log("ID del centro médico:", centroId);
                     localStorage.setItem('idCentro', centroId);
                     cargarDatos(centroId, token);
                 } catch (error) {
@@ -58,18 +59,16 @@ const CentroMedicoPanelPage = () => {
                     setMensaje('❌ No se pudo identificar el centro médico');
                 }
             } else {
-                window.location.href = '/'; // redirige si NO hay usuario
+                window.location.href = '/';
             }
         });
+
         return () => unsubscribe();
     }, []);
 
     const cargarDatos = async (idCentro, token) => {
         try {
             setLoading(true);
-            console.log("📤 Cargando datos para el centro ID:", idCentro);
-            console.log("Token utilizado:", token);
-
             const [medicosRes, pacientesRes] = await Promise.all([
                 axios.get(`http://localhost:8080/api/medicos/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
@@ -78,10 +77,6 @@ const CentroMedicoPanelPage = () => {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
-
-            // Logs para verificar los datos recibidos
-            console.log("Respuesta de médicos:", medicosRes.data);
-            console.log("Respuesta de pacientes:", pacientesRes.data);
 
             setMedicos(medicosRes.data);
             setPacientes(pacientesRes.data);
@@ -168,8 +163,6 @@ const CentroMedicoPanelPage = () => {
                 centroMedico: { pkId: centro.pkId }
             };
 
-            console.log('Datos enviados al backend:', medicoAEnviar); // Depuración para verificar el contenido del objeto
-
             await axios.post('http://localhost:8080/api/medicos', medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -187,7 +180,7 @@ const CentroMedicoPanelPage = () => {
             const idCentro = localStorage.getItem('idCentro');
             cargarDatos(idCentro, token);
         } catch (error) {
-            console.error('Error al crear el médico:', error.response?.data || error.message); // Capturar respuesta del backend
+            console.error('Error al crear el médico:', error.response?.data || error.message);
             setMensaje(`❌ ${error.response?.data || 'Error al crear el médico'}`);
         }
     };
@@ -195,25 +188,20 @@ const CentroMedicoPanelPage = () => {
     const handleLogout = async () => {
         const auth = getAuth();
         await auth.signOut();
-        localStorage.removeItem('idCentro'); // por si guardás algo ahí
-        window.location.href = '/'; // redirige al home
+        localStorage.removeItem('idCentro');
+        window.location.href = '/';
     };
-
 
     const eliminarMedico = async (id) => {
         if (!window.confirm('¿Estás seguro de eliminar este médico?')) return;
         try {
             const auth = getAuth();
             const user = auth.currentUser;
-            if (!user) {
-                setMensaje('❌ Usuario no autenticado');
-                return;
-            }
             const token = await user.getIdToken();
-            const res = await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
+            await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setMensaje(`✅ ${res.data}`);
+            setMensaje('✅ Médico eliminado');
             const idCentro = localStorage.getItem('idCentro');
             cargarDatos(idCentro, token);
         } catch (error) {
@@ -222,219 +210,57 @@ const CentroMedicoPanelPage = () => {
         }
     };
 
-    const styles = {
-        container: { padding: '2rem', maxWidth: '1200px', margin: '0 auto' },
-        form: {
-            display: 'grid',
-            gap: '1rem',
-            maxWidth: '600px',
-            margin: '2rem auto',
-            padding: '2rem',
-            backgroundColor: 'white',
-            borderRadius: '8px',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-        },
-        input: {
-            padding: '0.5rem',
-            borderRadius: '4px',
-            border: '1px solid #ddd'
-        },
-        button: (color = '#4CAF50') => ({
-            padding: '0.5rem 1rem',
-            backgroundColor: color,
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer'
-        }),
-        tab: (isActive) => ({
-            padding: '0.75rem 1.5rem',
-            backgroundColor: isActive ? '#4CAF50' : 'white',
-            color: isActive ? 'white' : '#333',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-            transition: '0.2s all'
-        }),
-        table: {
-            width: '100%',
-            borderCollapse: 'collapse',
-            marginTop: '1rem'
-        },
-        th: {
-            textAlign: 'left',
-            padding: '1rem',
-            backgroundColor: '#f5f5f5',
-            borderBottom: '2px solid #ddd'
-        },
-        td: {
-            padding: '1rem',
-            borderBottom: '1px solid #ddd'
-        },
-        mensaje: {
-            padding: '1rem',
-            marginBottom: '1rem',
-            borderRadius: '4px',
-            backgroundColor: mensaje.includes('❌') ? '#ffebee' : '#e8f5e9',
-            color: mensaje.includes('❌') ? '#c62828' : '#2e7d32'
-        }
-    };
-
     if (loading) {
-        return <div style={styles.container}>Cargando...</div>;
+        return (
+            <div className="flex items-center justify-center min-h-screen">
+                <h2 className="text-2xl font-bold text-[#30028D]">Cargando...</h2>
+            </div>
+        );
     }
 
     return (
-        <div style={styles.container}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-                <div>
-                    {centro?.urlLogo && (
-                        <img
-                            src={centro.urlLogo}
-                            alt="Logo del Centro Médico"
-                            onClick={() => document.getElementById('input-logo').click()}
-                            style={{
-                                maxWidth: '130px',
-                                borderRadius: '8px',
-                                cursor: 'pointer',
-                                transition: 'opacity 0.3s',
-                                boxShadow: '0 0 10px rgba(0,0,0,0.1)'
-                            }}
-                            title="Haz clic para cambiar el logo"
-                        />
-                    )}
-                    <input
-                        type="file"
-                        accept="image/*"
-                        id="input-logo"
-                        style={{ display: 'none' }}
-                        onChange={handleLogoCentro}
+        <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
+            <CentroMedicoNavbar nombreCentro={centro?.nombre || 'Centro Médico'} onLogout={handleLogout} />
+
+            {mensaje && (
+                <div className={`max-w-6xl mx-auto mt-6 px-6 py-4 rounded-lg ${mensaje.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                    {mensaje}
+                </div>
+            )}
+
+            <main className="flex-1 w-full max-w-7xl mx-auto px-4">
+                <div className="flex justify-end mt-8">
+                    <button
+                        onClick={() => setShowForm(!showForm)}
+                        className="bg-[#7358F5] hover:bg-[#30028D] text-white py-2 px-6 rounded-lg transition"
+                    >
+                        {showForm ? 'Cancelar' : 'Agregar Médico'}
+                    </button>
+                </div>
+
+                {showForm && (
+                    <CentroMedicoFormMedico
+                        formData={formData}
+                        handleChange={handleChange}
+                        handleEspecialidadChange={handleEspecialidadChange}
+                        handleImagenMedico={handleImagenMedico}
+                        handleSubmit={handleSubmit}
+                        logo={logo}
                     />
-                </div>
-                <div style={{ marginLeft: '1rem' }}>
-                    <h1 style={{ margin: 0 }}>Panel del Centro Médico</h1>
-                    {centro?.nombre && (
-                        <h2 style={{ margin: 0, fontWeight: 'normal' }}>{centro.nombre}</h2>
-                    )}
-                </div>
-                <button onClick={() => setShowForm(!showForm)} style={styles.button()}>
-                    {showForm ? 'Cancelar' : 'Agregar Médico'}
-                </button>
-                <button onClick={handleLogout} style={styles.button('#9e9e9e')}>
-                    Cerrar sesión
-                </button>
+                )}
 
-            </div>
+                <CentroMedicoTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-            {mensaje && <div style={styles.mensaje}>{mensaje}</div>}
+                {activeTab === 'medicos' ? (
+                    <CentroMedicoTableMedicos medicos={medicos} eliminarMedico={eliminarMedico} />
+                ) : (
+                    <CentroMedicoTablePacientes pacientes={pacientes} />
+                )}
+            </main>
 
-            {showForm && (
-                <form onSubmit={handleSubmit} style={styles.form}>
-                    <h2>Registrar Nuevo Médico</h2>
-                    <input name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleChange} style={styles.input} />
-                    <input name="apellido" placeholder="Apellido" value={formData.apellido} onChange={handleChange} style={styles.input} />
-                    <select name="tipoDocumento" value={formData.tipoDocumento} onChange={handleChange} style={styles.input}>
-                        <option value="CC">Cédula de Ciudadanía (CC)</option>
-                        <option value="TI">Tarjeta de Identidad (TI)</option>
-                        <option value="CE">Cédula de Extranjería (CE)</option>
-                        <option value="PAS">Pasaporte (PAS)</option>
-                    </select>
-                    <input name="idDocumento" placeholder="Número de Documento" value={formData.idDocumento} onChange={handleChange} style={styles.input} />
-                    <input type="date" name="fechaNacimiento" value={formData.fechaNacimiento} onChange={handleChange} style={styles.input} />
-                    <input type="text" name="profesion" value="Médico" readOnly style={styles.input} />
-                    <select name="especialidad" value={formData.especialidad} onChange={handleEspecialidadChange} style={styles.input}>
-                        <option value="Geriatría">Geriatría</option>
-                        <option value="Neurología">Neurología</option>
-                        <option value="Psiquiatría">Psiquiatría</option>
-                        <option value="Neuropsicología">Neuropsicología</option>
-                        <option value="Neurogeriatría">Neurogeriatría</option>
-                        <option value="Otra">Otra</option>
-                    </select>
-                    {formData.especialidad === 'Otra' && (
-                        <input name="especialidadCustom" placeholder="Escribe la especialidad" value={formData.especialidadCustom} onChange={handleChange} style={styles.input} />
-                    )}
-                    <input name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} style={styles.input} />
-                    <label style={{ fontWeight: 'bold' }}>Imagen del médico:</label>
-                    <input type="file" accept="image/*" onChange={handleImagenMedico} style={styles.input} />
-                    {logo && (
-                        <img
-                            src={logo}
-                            alt="Imagen del médico"
-                            style={{ maxWidth: '100px', marginTop: '0.5rem', borderRadius: '8px' }}
-                        />
-                    )}
-                    <input name="direccion" placeholder="Dirección" value={formData.direccion} onChange={handleChange} style={styles.input} />
-                    <select name="genero" value={formData.genero} onChange={handleChange} style={styles.input}>
-                        <option value="">Seleccionar género</option>
-                        <option value="M">Masculino</option>
-                        <option value="F">Femenino</option>
-                        <option value="O">Otro</option>
-                    </select>
-                    <input name="tarjetaProfesional" placeholder="Tarjeta Profesional" value={formData.tarjetaProfesional} onChange={handleChange} style={styles.input} />
-                    <input name="correo" placeholder="Correo Electrónico" type="email" value={formData.correo} onChange={handleChange} style={styles.input} />
-                    <button type="submit" style={styles.button()}>Registrar Médico</button>
-                </form>
-            )}
-
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-                <button onClick={() => setActiveTab('medicos')} style={styles.tab(activeTab === 'medicos')}>Médicos</button>
-                <button onClick={() => setActiveTab('pacientes')} style={styles.tab(activeTab === 'pacientes')}>Pacientes</button>
-            </div>
-
-            {activeTab === 'medicos' ? (
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Nombre</th>
-                            <th style={styles.th}>Especialidad</th>
-                            <th style={styles.th}>Teléfono</th>
-                            <th style={styles.th}>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {medicos.map((medico) => (
-                            <tr key={medico.pkId}>
-                                <td style={styles.td}>{`${medico.nombre} ${medico.apellido}`}</td>
-                                <td style={styles.td}>{medico.especialidad}</td>
-                                <td style={styles.td}>{medico.telefono}</td>
-                                <td style={styles.td}>
-                                    <button onClick={() => eliminarMedico(medico.pkId)} style={styles.button('#f44336')}>
-                                        Eliminar
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            ) : (
-                <table style={styles.table}>
-                    <thead>
-                        <tr>
-                            <th style={styles.th}>Nombre</th>
-                            <th style={styles.th}>Documento</th>
-                            <th style={styles.th}>Teléfono</th>
-                            <th style={styles.th}>Médicos Asignados</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {pacientes.map((paciente) => (
-                            <tr key={paciente.id}>
-                                <td style={styles.td}>{`${paciente.nombre} ${paciente.apellido}`}</td>
-                                <td style={styles.td}>{paciente.idDocumento}</td>
-                                <td style={styles.td}>{paciente.telefono}</td>
-                                <td style={styles.td}>
-                                    {paciente.medicos?.map((m) => `${m.nombre} ${m.apellido}`).join(', ') || 'Sin médicos asignados'}
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
+            <CentroMedicoFooter />
         </div>
     );
-
-
 };
 
 export default CentroMedicoPanelPage;
