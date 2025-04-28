@@ -12,7 +12,7 @@ import PacientePanelPage from './features/pacientes/pages/PacientePanelPage';
 function App() {
   return (
     <Router>
-      <ScrollToTop /> {/* <<--- Aquí lo usamos */}
+      <ScrollToTop />
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/panel" element={<CentroMedicoPanelPage />} />

@@ -1,30 +1,26 @@
+// src/features/admin/pages/AdminPanelPage.jsx
 import React, { useEffect, useState } from 'react';
+import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
-
 import AdminNavbar from '../components/AdminNavbar';
 import AdminFooter from '../components/AdminFooter';
-import AdminTabs from '../components/AdminTabs';
-import AdminTableUsuarios from '../components/AdminTableUsuarios';
-import AdminTableSolicitudes from '../components/AdminTableSolicitudes';
 
 const AdminPanelPage = () => {
     const [usuarios, setUsuarios] = useState({
         centro_medico: [],
         doctor: [],
-        paciente: [],
+        paciente: []
     });
     const [solicitudes, setSolicitudes] = useState([]);
-    const [rolesSeleccionados, setRolesSeleccionados] = useState({});
-    const [activeTab, setActiveTab] = useState('usuarios');
     const [loading, setLoading] = useState(true);
     const [mensaje, setMensaje] = useState('');
+    const [activeTab, setActiveTab] = useState('usuarios');
     const [adminEmail, setAdminEmail] = useState('');
+    const [rolSeleccionado, setRolSeleccionado] = useState({});
 
     const navigate = useNavigate();
 
-    // Verificación de autenticación
     useEffect(() => {
         const auth = getAuth();
         const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -38,29 +34,26 @@ const AdminPanelPage = () => {
         return () => unsubscribe();
     }, [navigate]);
 
-    // Cargar usuarios y solicitudes
     const cargarDatos = async () => {
         setLoading(true);
-        setMensaje('');
-        await Promise.all([cargarUsuarios(), cargarSolicitudes()]);
-        setLoading(false);
+        try {
+            await Promise.all([cargarUsuarios(), cargarSolicitudes()]);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const cargarUsuarios = async () => {
         try {
-            const auth = getAuth();
-            const token = await auth.currentUser.getIdToken();
-
+            const token = await getAuth().currentUser.getIdToken();
             const res = await axios.get('http://localhost:8080/api/admin/usuarios-firebase', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` }
             });
             const raw = res.data.usuariosPorRol;
             setUsuarios({
                 centro_medico: raw?.['centro_medico'] ?? [],
-                doctor: raw?.['doctor'] ?? [],
-                paciente: raw?.['paciente'] ?? [],
+                doctor: raw?.['medico'] ?? [],
+                paciente: raw?.['paciente'] ?? []
             });
         } catch (error) {
             console.error(error);
@@ -70,13 +63,9 @@ const AdminPanelPage = () => {
 
     const cargarSolicitudes = async () => {
         try {
-            const auth = getAuth();
-            const token = await auth.currentUser.getIdToken();
-
+            const token = await getAuth().currentUser.getIdToken();
             const res = await axios.get('http://localhost:8080/api/solicitudes-centro-medico', {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
+                headers: { Authorization: `Bearer ${token}` }
             });
             setSolicitudes(res.data);
         } catch (error) {
@@ -85,69 +74,22 @@ const AdminPanelPage = () => {
         }
     };
 
-    const procesarSolicitud = async (id, rol) => {
-        if (!rol) {
-            setMensaje('❌ Por favor selecciona un rol para esta solicitud');
-            return;
-        }
-
+    const cerrarSesion = async () => {
         try {
-            const token = await getAuth().currentUser.getIdToken();
-            await axios.put(
-                `http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`,
-                null,
-                {
-                    params: { rol },
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            );
-
-            setSolicitudes(prev => prev.filter((s) => s.id !== id));
-            setMensaje('✅ Solicitud procesada correctamente');
+            await signOut(getAuth());
+            navigate('/');
         } catch (error) {
-            console.error(error);
-            setMensaje('❌ Error al procesar la solicitud');
-        }
-    };
-
-    const eliminarSolicitud = async (id) => {
-        if (!window.confirm('¿Seguro que quieres eliminar esta solicitud?')) return;
-
-        try {
-            const token = await getAuth().currentUser.getIdToken();
-            await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            setSolicitudes(prev => prev.filter((s) => s.id !== id));
-            setMensaje('✅ Solicitud eliminada');
-        } catch (error) {
-            console.error(error);
-            setMensaje('❌ Error al eliminar la solicitud');
-        }
-    };
-
-    const revertirSolicitud = async (id) => {
-        try {
-            const token = await getAuth().currentUser.getIdToken();
-            await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/revertir`, null, {
-                headers: { Authorization: `Bearer ${token}` },
-            });
-
-            await cargarSolicitudes();
-            setMensaje('🔁 Solicitud revertida correctamente');
-        } catch (error) {
-            console.error(error);
-            setMensaje('❌ Error al revertir solicitud');
+            setMensaje('❌ Error al cerrar sesión');
         }
     };
 
     const eliminarUsuario = async (uid) => {
         if (!window.confirm('¿Confirmas eliminar este usuario?')) return;
-
         try {
-            await axios.delete(`http://localhost:8080/api/admin/usuarios-firebase/${uid}`);
-            setMensaje('🗑️ Usuario eliminado');
+            await axios.delete(`http://localhost:8080/api/admin/usuarios-firebase/${uid}`, {
+                headers: { 'Content-Type': 'application/json' }
+            });
+            setMensaje('✅ Usuario eliminado');
             await cargarUsuarios();
         } catch (error) {
             console.error(error);
@@ -155,20 +97,58 @@ const AdminPanelPage = () => {
         }
     };
 
-    const cerrarSesion = async () => {
+    const procesarSolicitud = async (id, rol) => {
+        if (!rol) {
+            setMensaje('❌ Selecciona un rol para procesar');
+            return;
+        }
         try {
-            const auth = getAuth();
-            await signOut(auth);
-            navigate('/');
+            const token = await getAuth().currentUser.getIdToken();
+            await axios.put(
+                `http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`,
+                null,
+                { params: { rol }, headers: { Authorization: `Bearer ${token}` } }
+            );
+            setMensaje('✅ Solicitud procesada');
+            await cargarDatos();
         } catch (error) {
             console.error(error);
-            setMensaje('❌ Error al cerrar sesión');
+            setMensaje('❌ Error al procesar solicitud');
+        }
+    };
+
+    const revertirSolicitud = async (id) => {
+        try {
+            const token = await getAuth().currentUser.getIdToken();
+            await axios.put(`http://localhost:8080/api/solicitudes-centro-medico/${id}/revertir`, null, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMensaje('✅ Solicitud revertida');
+            await cargarDatos();
+        } catch (error) {
+            console.error(error);
+            setMensaje('❌ Error al revertir solicitud');
+        }
+    };
+
+    const eliminarSolicitud = async (id) => {
+        if (!window.confirm('¿Eliminar esta solicitud definitivamente?')) return;
+        try {
+            const token = await getAuth().currentUser.getIdToken();
+            await axios.delete(`http://localhost:8080/api/solicitudes-centro-medico/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMensaje('✅ Solicitud eliminada');
+            await cargarDatos();
+        } catch (error) {
+            console.error(error);
+            setMensaje('❌ Error al eliminar solicitud');
         }
     };
 
     if (loading) {
         return (
-            <div className="flex items-center justify-center min-h-screen">
+            <div className="flex justify-center items-center h-screen">
                 <h2 className="text-2xl font-bold text-[#30028D]">Cargando...</h2>
             </div>
         );
@@ -176,51 +156,150 @@ const AdminPanelPage = () => {
 
     return (
         <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
-            {/* Navbar */}
             <AdminNavbar adminEmail={adminEmail} onLogout={cerrarSesion} />
 
-            {/* Mensaje */}
             {mensaje && (
-                <div
-                    className={`max-w-6xl mx-auto mt-6 px-6 py-4 rounded-lg ${mensaje.includes('❌')
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-green-100 text-green-700'
-                        }`}
-                >
+                <div className={`max-w-6xl mx-auto mt-6 px-6 py-4 rounded-lg ${mensaje.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                     {mensaje}
                 </div>
             )}
 
-            {/* Contenido de Tabs y Tablas */}
-            <main className="flex-1 flex flex-col items-center justify-start w-full">
-                <div className="w-full max-w-7xl px-4">
-                    <AdminTabs activeTab={activeTab} setActiveTab={setActiveTab} />
+            <div className="max-w-6xl mx-auto mt-8 flex justify-center gap-4">
+                <button
+                    onClick={() => setActiveTab('usuarios')}
+                    className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'usuarios' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
+                >
+                    Usuarios
+                </button>
+                <button
+                    onClick={() => setActiveTab('solicitudes')}
+                    className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'solicitudes' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
+                >
+                    Solicitudes
+                </button>
+            </div>
 
-                    <div className="mt-8 mb-16">
-                        {activeTab === 'usuarios' ? (
-                            <AdminTableUsuarios
-                                usuarios={usuarios}
-                                eliminarUsuario={eliminarUsuario}
-                            />
+            <div className="max-w-6xl mx-auto mt-8 mb-16 px-4">
+                {activeTab === 'usuarios' ? (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <h2 className="text-2xl font-bold text-[#30028D] mb-6">Usuarios por Rol</h2>
+                        {Object.entries(usuarios).map(([rol, listaUsuarios]) => (
+                            <div key={rol} className="mb-10">
+                                <h3 className="text-xl font-semibold text-[#7358F5] mb-4 capitalize">
+                                    {rol.replace('_', ' ')} ({listaUsuarios.length})
+                                </h3>
+                                {listaUsuarios.length === 0 ? (
+                                    <p className="text-gray-600">No hay usuarios en este rol.</p>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                            <thead className="bg-[#F9CFA7]">
+                                                <tr>
+                                                    <th className="py-3 px-6 text-left font-semibold">Email</th>
+                                                    <th className="py-3 px-6 text-left font-semibold">Estado</th>
+                                                    <th className="py-3 px-6 text-left font-semibold">Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {listaUsuarios.map((usuario) => (
+                                                    <tr key={usuario.uid} className="border-b">
+                                                        <td className="py-3 px-6">{usuario.email}</td>
+                                                        <td className="py-3 px-6">{usuario.disabled ? 'Desactivado' : 'Activo'}</td>
+                                                        <td className="py-3 px-6">
+                                                            <button
+                                                                onClick={() => eliminarUsuario(usuario.uid)}
+                                                                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-4 rounded-lg transition"
+                                                            >
+                                                                Eliminar
+                                                            </button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <h2 className="text-2xl font-bold text-[#30028D] mb-6">Solicitudes de Registro</h2>
+                        {solicitudes.length === 0 ? (
+                            <p className="text-gray-600">No hay solicitudes pendientes.</p>
                         ) : (
-                            <AdminTableSolicitudes
-                                solicitudes={solicitudes}
-                                rolSeleccionado={rolesSeleccionados}
-                                setRolSeleccionado={setRolesSeleccionados}
-                                procesarSolicitud={procesarSolicitud}
-                                eliminarSolicitud={eliminarSolicitud}
-                                revertirSolicitud={revertirSolicitud}
-                            />
+                            <div className="overflow-x-auto">
+                                <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                    <thead className="bg-[#F9CFA7]">
+                                        <tr>
+                                            <th className="py-3 px-6 text-left font-semibold">Nombre</th>
+                                            <th className="py-3 px-6 text-left font-semibold">Correo</th>
+                                            <th className="py-3 px-6 text-left font-semibold">Teléfono</th>
+                                            <th className="py-3 px-6 text-left font-semibold">Estado</th>
+                                            <th className="py-3 px-6 text-left font-semibold">Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {solicitudes.map((solicitud) => (
+                                            <tr key={solicitud.id} className="border-b">
+                                                <td className="py-3 px-6">{solicitud.nombre}</td>
+                                                <td className="py-3 px-6">{solicitud.correo}</td>
+                                                <td className="py-3 px-6">{solicitud.telefono}</td>
+                                                <td className="py-3 px-6">{solicitud.estado}</td>
+                                                <td className="py-3 px-6 flex flex-col md:flex-row gap-2">
+                                                    {!solicitud.procesado ? (
+                                                        <>
+                                                            <select
+                                                                value={rolSeleccionado[solicitud.id] || ''}
+                                                                onChange={(e) =>
+                                                                    setRolSeleccionado((prev) => ({
+                                                                        ...prev,
+                                                                        [solicitud.id]: e.target.value
+                                                                    }))
+                                                                }
+                                                                className="border border-gray-300 rounded-lg p-2"
+                                                            >
+                                                                <option value="">Seleccionar rol</option>
+                                                                <option value="ADMINISTRADOR">Administrador</option>
+                                                                <option value="CENTRO_MEDICO">Centro Médico</option>
+                                                                <option value="MEDICO">Médico</option>
+                                                                <option value="PACIENTE">Paciente</option>
+                                                            </select>
+                                                            <button
+                                                                onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
+                                                                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                            >
+                                                                Procesar
+                                                            </button>
+                                                        </>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => revertirSolicitud(solicitud.id)}
+                                                            className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                        >
+                                                            Revertir
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => eliminarSolicitud(solicitud.id)}
+                                                        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                    >
+                                                        Eliminar
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         )}
                     </div>
-                </div>
-            </main>
+                )}
+            </div>
 
-            {/* Footer */}
             <AdminFooter />
         </div>
     );
-
 };
 
 export default AdminPanelPage;

@@ -4,7 +4,7 @@ import abeja1 from '../../../assets/AbejaFondo.png';
 
 const AboutSection = () => {
     return (
-        <section className="bg-white py-16 px-4 flex flex-col items-center">
+        <section id="about" className="bg-white py-16 px-4 flex flex-col items-center">
             <div className="max-w-4xl text-center">
                 <h2 className="text-4xl font-bold text-[#30028D] mb-6">¿Qué es KALA?</h2>
                 <p className="text-gray-700 text-lg leading-relaxed">

@@ -60,14 +60,52 @@ const FormularioSection = ({
                         onChange={handleChange}
                     />
                     {errors.telefono && <p className="text-red-500">{errors.telefono}</p>}
+                    <div className="w-full border-2 border-dashed border-[#7358F5] rounded-lg p-6 flex flex-col items-center justify-center text-center hover:bg-[#f5f0ff] transition relative">
+                        {/* Input oculto */}
+                        <input
+                            id="logoInput"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                            className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
 
-                    <input
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                        type="file"
-                        accept="image/*"
-                        onChange={handleLogoUpload}
-                    />
-                    {errors.urlLogo && <p className="text-red-500">{errors.urlLogo}</p>}
+                        {/* Si hay imagen, mostrarla */}
+                        {archivoLogo ? (
+                            <img
+                                src={URL.createObjectURL(archivoLogo)}
+                                alt="Vista previa"
+                                className="w-full h-48 object-contain rounded-lg"
+                            />
+                        ) : (
+                            <>
+                                {/* Ícono */}
+                                <svg
+                                    className="w-12 h-12 text-[#7358F5] mb-4"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="1.5"
+                                    viewBox="0 0 24 24"
+                                >
+                                    <path
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        d="M3 5a2 2 0 012-2h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5zm3 14l3.5-4.5 2.5 3 3.5-4.5L21 19M7 7h.01M12 7h.01M17 7h.01"
+                                    />
+                                </svg>
+
+                                {/* Texto */}
+                                <p className="text-[#7358F5] font-semibold">Haz clic o arrastra una imagen</p>
+                                <p className="text-sm text-gray-400 mt-1">Formatos permitidos: JPG, PNG</p>
+                            </>
+                        )}
+
+                        {/* Error si existe */}
+                        {errors.urlLogo && (
+                            <p className="text-red-500 text-xs mt-2">{errors.urlLogo}</p>
+                        )}
+                    </div>
+
 
                     {archivoLogo && (
                         <div className="flex justify-center mt-4">

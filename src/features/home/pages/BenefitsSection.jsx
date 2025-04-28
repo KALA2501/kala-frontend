@@ -18,7 +18,7 @@ const benefits = [
 
 const BenefitsSection = () => {
     return (
-        <section className="bg-[#F9CFA7] py-16 px-4">
+        <section id="benefits" className="bg-[#F9CFA7] py-16 px-4"> {/* Agrega id="benefits" aquí */}
             <div className="max-w-6xl mx-auto text-center">
                 <h2 className="text-4xl font-bold text-[#30028D] mb-10">¿Por qué elegir KALA?</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">

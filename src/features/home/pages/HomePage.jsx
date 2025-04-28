@@ -9,6 +9,7 @@ import AboutSection from './AboutSection';
 import MissionSection from './MissionSection';
 import BenefitsSection from './BenefitsSection';
 import FormularioSection from './FormularioSection';
+import HomeNavbar from './HomeNavbar';
 import Footer from './Footer';
 
 const HomePage = () => {
@@ -112,6 +113,7 @@ const HomePage = () => {
 
     return (
         <div className="flex flex-col min-h-screen">
+            <HomeNavbar />
             <HeroSection />
             <AboutSection />
             <MissionSection />

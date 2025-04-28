@@ -7,7 +7,7 @@ const HeroSection = () => {
     const navigate = useNavigate();
 
     return (
-        <div className="flex flex-col items-center justify-center text-center bg-[#F5EE97] py-16 px-4">
+        <section id="hero" className="flex flex-col items-center justify-center text-center bg-[#F5EE97] py-16 px-4"> {/* Agrega id="hero" aquí */}
             <img src={logo} alt="KALA Logo" className="w-40 h-40 mb-6" />
             <h1 className="text-5xl font-bold text-[#30028D]">Bienvenido a KALA</h1>
             <p className="mt-4 text-lg text-gray-700 max-w-xl">
@@ -27,7 +27,7 @@ const HeroSection = () => {
                     Registrarme como Centro Médico
                 </a>
             </div>
-        </div>
+        </section>
     );
 };
 
