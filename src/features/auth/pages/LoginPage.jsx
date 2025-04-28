@@ -21,18 +21,18 @@ const LoginPage = () => {
             const user = userCredential.user;
 
             const token = await user.getIdTokenResult();
-            const role = token.claims.role;
+            const rol = token.claims.rol;
 
             console.log(token);
-            console.log('Rol extraído del token:', role);
+            console.log('Rol extraído del token:', rol);
 
             if (user.email === 'admin@kala.com') {
                 navigate('/admin-panel');
-            } else if (role?.trim() === 'centro_medico') {
+            } else if (rol?.trim() === 'centro_medico') {
                 navigate('/panel');
-            } else if (role?.trim() === 'medico') {
+            } else if (rol?.trim() === 'medico') {
                 navigate('/medico-panel');
-            } else if (role?.trim() === 'paciente') {
+            } else if (rol?.trim() === 'paciente') {
                 navigate('/paciente-panel');
             } else {
                 setError('Rol no reconocido. Contacta al administrador.');

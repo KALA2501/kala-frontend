@@ -2,45 +2,45 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 
 function AppRouter() {
-  const [userRole, setUserRole] = useState(null);
-  const [usersByRole, setUsersByRole] = useState({});
+  const [userRol, setUserRol] = useState(null);
+  const [usersByRol, setUsersByRol] = useState({});
 
   useEffect(() => {
-    async function fetchUsersByRole() {
+    async function fetchUsersByRol() {
       try {
         const response = await axios.get('/api/admin/usuarios-firebase');
         console.log('🔍 Datos recibidos del backend:', response.data);
-        setUsersByRole(response.data.usuariosPorRol);
+        setUsersByRol(response.data.usuariosPorRol);
       } catch (error) {
         console.error('❌ Error al obtener usuarios por rol:', error);
       }
     }
-    fetchUsersByRole();
+    fetchUsersByRol();
   }, []);
 
-  if (!usersByRole) {
+  if (!usersByRol) {
     return <div>Loading...</div>;
   }
 
-  console.log('🔍 Procesando usuarios por rol:', usersByRole);
-  Object.keys(usersByRole).forEach(role => {
-    console.log(`Usuarios con rol ${role}:`, usersByRole[role]);
+  console.log('🔍 Procesando usuarios por rol:', usersByRol);
+  Object.keys(usersByRol).forEach(rol => {
+    console.log(`Usuarios con rol ${rol}:`, usersByRol[rol]);
   });
-  console.log('🔍 Usuarios con rol medico:', usersByRole['medico']);
+  console.log('🔍 Usuarios con rol medico:', usersByRol['medico']);
 
   return (
     <BrowserRouter>
       <ScrollToTop />
       <Routes>
-        {Object.keys(usersByRole).map((role) => {
-          if (role === 'centro_medico') {
-            return <Route key={role} path="/panel" element={<CentroMedicoPanelPage />} />;
+        {Object.keys(usersByRol).map((rol) => {
+          if (rol === 'centro_medico') {
+            return <Route key={rol} path="/panel" element={<CentroMedicoPanelPage />} />;
           }
-          if (role === 'medico') {
-            return <Route key={role} path="/medico-panel" element={<DoctorPanelPage />} />;
+          if (rol === 'medico') {
+            return <Route key={rol} path="/medico-panel" element={<DoctorPanelPage />} />;
           }
-          if (role === 'paciente') {
-            return <Route key={role} path="/paciente-panel" element={<PacientePanelPage />} />;
+          if (rol === 'paciente') {
+            return <Route key={rol} path="/paciente-panel" element={<PacientePanelPage />} />;
           }
           return null;
         })}

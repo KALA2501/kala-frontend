@@ -49,6 +49,7 @@ const AdminPanelPage = () => {
             const res = await axios.get('http://localhost:8080/api/admin/usuarios-firebase', {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            console.log("🚀 Usuarios cargados:", res.data.usuariosPorRol);
             const raw = res.data.usuariosPorRol;
             setUsuarios({
                 centro_medico: raw?.['centro_medico'] ?? [],
@@ -104,11 +105,35 @@ const AdminPanelPage = () => {
         }
         try {
             const token = await getAuth().currentUser.getIdToken();
+
+            // ⚡ Normalizar el rol antes de enviar
+            let rolFormateado = '';
+
+            switch (rol) {
+                case 'CENTRO_MEDICO':
+                    rolFormateado = 'centro_medico';
+                    break;
+                case 'PACIENTE':
+                    rolFormateado = 'paciente';
+                    break;
+                case 'MEDICO':
+                    rolFormateado = 'doctor';
+                    break;
+                case 'ADMINISTRADOR':
+                    rolFormateado = 'admin';
+                    break;
+                default:
+                    rolFormateado = rol.toLowerCase();
+                    break;
+            }
+
+            // ⚡ Ahora enviar el rol como parámetro en la URL, no en el body
             await axios.put(
-                `http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar`,
+                `http://localhost:8080/api/solicitudes-centro-medico/${id}/procesar?rol=${rolFormateado}`,
                 null,
-                { params: { rol }, headers: { Authorization: `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` } }
             );
+
             setMensaje('✅ Solicitud procesada');
             await cargarDatos();
         } catch (error) {
