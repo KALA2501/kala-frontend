@@ -48,7 +48,7 @@ const AdminPanelPage = () => {
     const cargarUsuarios = async () => {
         try {
             const token = await getAuth().currentUser.getIdToken();
-            const res = await axios.get('API_GATEWAY/api/admin/usuarios-firebase', {
+            const res = await axios.get('${API_GATEWAY}/api/admin/usuarios-firebase', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             console.log("🚀 Usuarios cargados:", res.data.usuariosPorRol);
@@ -67,7 +67,7 @@ const AdminPanelPage = () => {
     const cargarSolicitudes = async () => {
         try {
             const token = await getAuth().currentUser.getIdToken();
-            const res = await axios.get('API_GATEWAY/api/solicitudes-centro-medico', {
+            const res = await axios.get('${API_GATEWAY}/api/solicitudes-centro-medico', {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSolicitudes(res.data);
@@ -89,7 +89,7 @@ const AdminPanelPage = () => {
     const eliminarUsuario = async (uid) => {
         if (!window.confirm('¿Confirmas eliminar este usuario?')) return;
         try {
-            await axios.delete(`API_GATEWAY/api/admin/usuarios-firebase/${uid}`, {
+            await axios.delete(`${API_GATEWAY}/api/admin/usuarios-firebase/${uid}`, {
                 headers: { 'Content-Type': 'application/json' }
             });
             setMensaje('✅ Usuario eliminado');
@@ -131,7 +131,7 @@ const AdminPanelPage = () => {
 
             // ⚡ Ahora enviar el rol como parámetro en la URL, no en el body
             await axios.put(
-                `API_GATEWAY/api/solicitudes-centro-medico/${id}/procesar?rol=${rolFormateado}`,
+                `${API_GATEWAY}/api/solicitudes-centro-medico/${id}/procesar?rol=${rolFormateado}`,
                 null,
                 { headers: { Authorization: `Bearer ${token}` } }
             );
@@ -147,7 +147,7 @@ const AdminPanelPage = () => {
     const revertirSolicitud = async (id) => {
         try {
             const token = await getAuth().currentUser.getIdToken();
-            await axios.put(`API_GATEWAY/api/solicitudes-centro-medico/${id}/revertir`, null, {
+            await axios.put(`${API_GATEWAY}/api/solicitudes-centro-medico/${id}/revertir`, null, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje('✅ Solicitud revertida');
@@ -162,7 +162,7 @@ const AdminPanelPage = () => {
         if (!window.confirm('¿Eliminar esta solicitud definitivamente?')) return;
         try {
             const token = await getAuth().currentUser.getIdToken();
-            await axios.delete(`API_GATEWAY/api/solicitudes-centro-medico/${id}`, {
+            await axios.delete(`${API_GATEWAY}/api/solicitudes-centro-medico/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje('✅ Solicitud eliminada');

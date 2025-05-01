@@ -81,7 +81,7 @@ const HomePage = () => {
                 urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
             }
 
-            await axios.post('API_GATEWAY/api/solicitudes-centro-medico', {
+            await axios.post('${API_GATEWAY}/api/solicitudes-centro-medico', {
                 ...formData,
                 urlLogo: urlLogoFinal,
             }, {

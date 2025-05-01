@@ -48,7 +48,7 @@ const CentroMedicoPanelPage = () => {
                 const token = await user.getIdToken();
                 try {
                     const res = await axios.get(
-                        `API_GATEWAY/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        `${API_GATEWAY}/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const centroData = res.data;
@@ -72,10 +72,10 @@ const CentroMedicoPanelPage = () => {
         try {
             setLoading(true);
             const [medicosRes, pacientesRes] = await Promise.all([
-                axios.get(`API_GATEWAY/api/medicos/centro-medico/${idCentro}`, {
+                axios.get(`${API_GATEWAY}/api/medicos/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get(`API_GATEWAY/api/pacientes/centro-medico/${idCentro}`, {
+                axios.get(`${API_GATEWAY}/api/pacientes/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
@@ -165,7 +165,7 @@ const CentroMedicoPanelPage = () => {
                 centroMedico: { pkId: centro.pkId }
             };
 
-            await axios.post('API_GATEWAY/api/medicos', medicoAEnviar, {
+            await axios.post('${API_GATEWAY}/api/medicos', medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -200,7 +200,7 @@ const CentroMedicoPanelPage = () => {
             const auth = getAuth();
             const user = auth.currentUser;
             const token = await user.getIdToken();
-            await axios.delete(`API_GATEWAY/api/medicos/${id}`, {
+            await axios.delete(`${API_GATEWAY}/api/medicos/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje('✅ Médico eliminado');

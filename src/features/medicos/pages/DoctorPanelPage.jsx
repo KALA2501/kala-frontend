@@ -20,7 +20,7 @@ const DoctorPanelPage = () => {
                     const token = await user.getIdToken();
                     console.log(token); // Verificar si el token aparece en la consola antes de la petición
                     const res = await axios.get(
-                        `API_GATEWAY/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        `${API_GATEWAY}/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -49,7 +49,7 @@ const DoctorPanelPage = () => {
                 const token = await user.getIdToken();
 
                 try {
-                    const res = await axios.get('API_GATEWAY/api/pacientes/del-medico', {
+                    const res = await axios.get('${API_GATEWAY}/api/pacientes/del-medico', {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -75,7 +75,7 @@ const DoctorPanelPage = () => {
                 try {
                     // Asegúrate de que los parámetros estén definidos antes de enviarlos
                     if (medicoId && id) {
-                        await axios.delete(`API_GATEWAY/api/vinculacion?pacienteId=${id}&medicoId=${medicoId}`, {
+                        await axios.delete(`${API_GATEWAY}/api/vinculacion?pacienteId=${id}&medicoId=${medicoId}`, {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                             },

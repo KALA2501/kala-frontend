@@ -28,7 +28,7 @@ const PacientePanelPage = () => {
 
                     // Obtener los detalles del paciente
                     const res = await axios.get(
-                        `API_GATEWAY/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
+                        `${API_GATEWAY}/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -42,7 +42,7 @@ const PacientePanelPage = () => {
 
                     // Obtener médicos vinculados al paciente
                     const medicosRes = await axios.get(
-                        `API_GATEWAY/api/pacientes/${pacienteData.pkId}/medicos`,
+                        `${API_GATEWAY}/api/pacientes/${pacienteData.pkId}/medicos`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,

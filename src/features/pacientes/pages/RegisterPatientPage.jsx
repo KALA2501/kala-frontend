@@ -34,7 +34,7 @@ const RegisterPatientPage = () => {
                 if (rol === 'medico') {
                     try {
                         const res = await axios.get(
-                            `API_GATEWAY/api/medicos/buscar-por-correo?correo=${correo}`,
+                            `${API_GATEWAY}/api/medicos/buscar-por-correo?correo=${correo}`,
                             { headers: { Authorization: `Bearer ${token.token}` } }
                         );
                         setMedico(res.data);
@@ -88,7 +88,7 @@ const RegisterPatientPage = () => {
                 rol: 'paciente'
             };
 
-            await axios.post('API_GATEWAY/api/pacientes/registrar-completo', payload, {
+            await axios.post('${API_GATEWAY}/api/pacientes/registrar-completo', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
