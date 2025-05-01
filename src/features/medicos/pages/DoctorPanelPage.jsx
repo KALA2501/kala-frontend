@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
 
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+
 const DoctorPanelPage = () => {
     const navigate = useNavigate();
     const [doctorImage, setDoctorImage] = useState('');
@@ -18,7 +20,7 @@ const DoctorPanelPage = () => {
                     const token = await user.getIdToken();
                     console.log(token); // Verificar si el token aparece en la consola antes de la petición
                     const res = await axios.get(
-                        `http://localhost:8080/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        `API_GATEWAY/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -47,7 +49,7 @@ const DoctorPanelPage = () => {
                 const token = await user.getIdToken();
 
                 try {
-                    const res = await axios.get('http://localhost:8080/api/pacientes/del-medico', {
+                    const res = await axios.get('API_GATEWAY/api/pacientes/del-medico', {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
@@ -73,7 +75,7 @@ const DoctorPanelPage = () => {
                 try {
                     // Asegúrate de que los parámetros estén definidos antes de enviarlos
                     if (medicoId && id) {
-                        await axios.delete(`http://localhost:8080/api/vinculacion?pacienteId=${id}&medicoId=${medicoId}`, {
+                        await axios.delete(`API_GATEWAY/api/vinculacion?pacienteId=${id}&medicoId=${medicoId}`, {
                             headers: {
                                 Authorization: `Bearer ${token}`,
                             },

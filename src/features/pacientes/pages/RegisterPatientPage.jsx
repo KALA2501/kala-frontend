@@ -4,6 +4,8 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { subirImagen } from '../../../services/firebase';
 
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+
 const RegisterPatientPage = () => {
     const [formData, setFormData] = useState({
         nombre: '', apellido: '', tipoDocumento: 'CC', idDocumento: '',
@@ -32,7 +34,7 @@ const RegisterPatientPage = () => {
                 if (rol === 'medico') {
                     try {
                         const res = await axios.get(
-                            `http://localhost:8080/api/medicos/buscar-por-correo?correo=${correo}`,
+                            `API_GATEWAY/api/medicos/buscar-por-correo?correo=${correo}`,
                             { headers: { Authorization: `Bearer ${token.token}` } }
                         );
                         setMedico(res.data);
@@ -86,7 +88,7 @@ const RegisterPatientPage = () => {
                 rol: 'paciente'
             };
 
-            await axios.post('http://localhost:8080/api/pacientes/registrar-completo', payload, {
+            await axios.post('API_GATEWAY/api/pacientes/registrar-completo', payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

@@ -12,6 +12,8 @@ import FormularioSection from './FormularioSection';
 import HomeNavbar from './HomeNavbar';
 import Footer from './Footer';
 
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+
 const HomePage = () => {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
@@ -79,7 +81,7 @@ const HomePage = () => {
                 urlLogoFinal = await subirImagen(archivoLogo, 'centros-medicos');
             }
 
-            await axios.post('http://localhost:8080/api/solicitudes-centro-medico', {
+            await axios.post('API_GATEWAY/api/solicitudes-centro-medico', {
                 ...formData,
                 urlLogo: urlLogoFinal,
             }, {

@@ -10,6 +10,8 @@ import CentroMedicoTablePacientes from '../components/CentroMedicoTablePacientes
 import CentroMedicoFormMedico from '../components/CentroMedicoFormMedico';
 import { subirImagen } from '../../../services/firebase'; // Asegúrate de que el import esté bien
 
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+
 const CentroMedicoPanelPage = () => {
     const [medicos, setMedicos] = useState([]);
     const [pacientes, setPacientes] = useState([]);
@@ -46,7 +48,7 @@ const CentroMedicoPanelPage = () => {
                 const token = await user.getIdToken();
                 try {
                     const res = await axios.get(
-                        `http://localhost:8080/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
+                        `API_GATEWAY/api/centro-medico/buscar-por-correo?correo=${encodeURIComponent(email)}`,
                         { headers: { Authorization: `Bearer ${token}` } }
                     );
                     const centroData = res.data;
@@ -70,10 +72,10 @@ const CentroMedicoPanelPage = () => {
         try {
             setLoading(true);
             const [medicosRes, pacientesRes] = await Promise.all([
-                axios.get(`http://localhost:8080/api/medicos/centro-medico/${idCentro}`, {
+                axios.get(`API_GATEWAY/api/medicos/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 }),
-                axios.get(`http://localhost:8080/api/pacientes/centro-medico/${idCentro}`, {
+                axios.get(`API_GATEWAY/api/pacientes/centro-medico/${idCentro}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 })
             ]);
@@ -163,7 +165,7 @@ const CentroMedicoPanelPage = () => {
                 centroMedico: { pkId: centro.pkId }
             };
 
-            await axios.post('http://localhost:8080/api/medicos', medicoAEnviar, {
+            await axios.post('API_GATEWAY/api/medicos', medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
@@ -198,7 +200,7 @@ const CentroMedicoPanelPage = () => {
             const auth = getAuth();
             const user = auth.currentUser;
             const token = await user.getIdToken();
-            await axios.delete(`http://localhost:8080/api/medicos/${id}`, {
+            await axios.delete(`API_GATEWAY/api/medicos/${id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje('✅ Médico eliminado');

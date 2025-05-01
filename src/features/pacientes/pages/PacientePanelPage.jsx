@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+
 const PacientePanelPage = () => {
     const navigate = useNavigate();
     const [pacienteImage, setPacienteImage] = useState('');
@@ -26,7 +28,7 @@ const PacientePanelPage = () => {
 
                     // Obtener los detalles del paciente
                     const res = await axios.get(
-                        `http://localhost:8080/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
+                        `API_GATEWAY/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
@@ -40,7 +42,7 @@ const PacientePanelPage = () => {
 
                     // Obtener médicos vinculados al paciente
                     const medicosRes = await axios.get(
-                        `http://localhost:8080/api/pacientes/${pacienteData.pkId}/medicos`,
+                        `API_GATEWAY/api/pacientes/${pacienteData.pkId}/medicos`,
                         {
                             headers: {
                                 Authorization: `Bearer ${token}`,
