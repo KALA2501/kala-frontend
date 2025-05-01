@@ -49,7 +49,7 @@ const DoctorPanelPage = () => {
                 const token = await user.getIdToken();
 
                 try {
-                    const res = await axios.get('${API_GATEWAY}/api/pacientes/del-medico', {
+                    const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico`, {
                         headers: {
                             Authorization: `Bearer ${token}`,
                         },
