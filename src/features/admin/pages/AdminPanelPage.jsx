@@ -44,14 +44,13 @@ const AdminPanelPage = () => {
             setLoading(false);
         }
     };
-    // Y EL VARIABLE DE ENTORNO XD KHE TE DIVIERTAS CAMBIANDO CADA UNA A MANO
+
     const cargarUsuarios = async () => {
         try {
             const token = await getAuth().currentUser.getIdToken();
-            const res = await axios.get('${API_GATEWAY}/api/admin/usuarios-firebase', {
+            const res = await axios.get(`${API_GATEWAY}/api/admin/usuarios-firebase`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            console.log("🚀 Usuarios cargados:", res.data.usuariosPorRol);
             const raw = res.data.usuariosPorRol;
             setUsuarios({
                 centro_medico: raw?.['centro_medico'] ?? [],
@@ -67,7 +66,7 @@ const AdminPanelPage = () => {
     const cargarSolicitudes = async () => {
         try {
             const token = await getAuth().currentUser.getIdToken();
-            const res = await axios.get('${API_GATEWAY}/api/solicitudes-centro-medico', {
+            const res = await axios.get(`${API_GATEWAY}/api/solicitudes-centro-medico`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setSolicitudes(res.data);
@@ -107,29 +106,15 @@ const AdminPanelPage = () => {
         }
         try {
             const token = await getAuth().currentUser.getIdToken();
-
-            // ⚡ Normalizar el rol antes de enviar
             let rolFormateado = '';
-
             switch (rol) {
-                case 'CENTRO_MEDICO':
-                    rolFormateado = 'centro_medico';
-                    break;
-                case 'PACIENTE':
-                    rolFormateado = 'paciente';
-                    break;
-                case 'MEDICO':
-                    rolFormateado = 'doctor';
-                    break;
-                case 'ADMINISTRADOR':
-                    rolFormateado = 'admin';
-                    break;
-                default:
-                    rolFormateado = rol.toLowerCase();
-                    break;
+                case 'CENTRO_MEDICO': rolFormateado = 'centro_medico'; break;
+                case 'PACIENTE': rolFormateado = 'paciente'; break;
+                case 'MEDICO': rolFormateado = 'doctor'; break;
+                case 'ADMINISTRADOR': rolFormateado = 'admin'; break;
+                default: rolFormateado = rol.toLowerCase(); break;
             }
 
-            // ⚡ Ahora enviar el rol como parámetro en la URL, no en el body
             await axios.put(
                 `${API_GATEWAY}/api/solicitudes-centro-medico/${id}/procesar?rol=${rolFormateado}`,
                 null,

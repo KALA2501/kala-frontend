@@ -165,7 +165,7 @@ const CentroMedicoPanelPage = () => {
                 centroMedico: { pkId: centro.pkId }
             };
 
-            await axios.post('${API_GATEWAY}/api/medicos', medicoAEnviar, {
+            await axios.post(`${API_GATEWAY}/api/medicos`, medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 

@@ -88,7 +88,7 @@ const RegisterPatientPage = () => {
                 rol: 'paciente'
             };
 
-            await axios.post('${API_GATEWAY}/api/pacientes/registrar-completo', payload, {
+            await axios.post(`${API_GATEWAY}/api/pacientes/registrar-completo`, payload, {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
