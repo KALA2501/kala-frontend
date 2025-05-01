@@ -6,7 +6,7 @@ import axios from 'axios';
 import AdminNavbar from '../components/AdminNavbar';
 import AdminFooter from '../components/AdminFooter';
 
-const API_GATEWAY = process.env.REACT_APP_API_GATEWAY;
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
 
 const AdminPanelPage = () => {
     const [usuarios, setUsuarios] = useState({
