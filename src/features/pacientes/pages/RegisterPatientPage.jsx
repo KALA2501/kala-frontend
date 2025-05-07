@@ -10,7 +10,10 @@ const RegisterPatientPage = () => {
     const [formData, setFormData] = useState({
         nombre: '', apellido: '', tipoDocumento: 'CC', idDocumento: '',
         fechaNacimiento: '', codigoCIE: '', telefono: '', email: '',
-        direccion: '', etapa: 1, genero: '', urlImagen: '', tipoVinculacion: '', contactoEmergencia: ''
+        direccion: '', etapa: 1, genero: '', urlImagen: '',
+        tipoVinculacion: 'TV02', 
+        contactoEmergencia: '',
+        ceNombre: '', ceApellido: '', ceRelacion: '', ceTelefono: '', ceDireccion: '', ceEmail: ''
     });
     const [mensaje, setMensaje] = useState('');
     const [medico, setMedico] = useState(null);
@@ -63,18 +66,64 @@ const RegisterPatientPage = () => {
         if (archivo) setImagenSeleccionada(archivo);
     };
 
+    // Buscar contacto por teléfono
+    const buscarContactoExistente = async (telefono, token) => {
+        try {
+            const res = await axios.get(`${API_GATEWAY}/api/contacto-emergencia/buscar-por-telefono?telefono=${telefono}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            return res.data; // contacto encontrado
+        } catch {
+            return null; // no encontrado
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
             const auth = getAuth();
             const token = await auth.currentUser.getIdToken();
-            console.log(token); // Verificar si el token aparece en la consola antes de la petición
 
+            // Subir imagen si existe
             let urlImagen = '';
             if (imagenSeleccionada) {
                 urlImagen = await subirImagen(imagenSeleccionada, 'pacientes');
             }
 
+            // Paso 1: Buscar contacto de emergencia
+            let contactoId = null;
+            const contactoExistente = await buscarContactoExistente(formData.ceTelefono, token);
+
+            if (contactoExistente) {
+                const usarExistente = window.confirm(
+                    `Ya existe un contacto con ese teléfono:\n\nNombre: ${contactoExistente.nombre} ${contactoExistente.apellido}\nRelación: ${contactoExistente.relacion}\n¿Deseas usar este contacto?`
+                );
+                if (usarExistente) {
+                    contactoId = contactoExistente.pkId;
+                }
+            }
+
+            // Paso 2: Si no existe o no se quiere usar el existente, registramos uno nuevo
+            if (!contactoId) {
+                const contactoEmergenciaPayload = {
+                    nombre: formData.ceNombre,
+                    apellido: formData.ceApellido,
+                    relacion: formData.ceRelacion,
+                    direccion: formData.ceDireccion,
+                    telefono: formData.ceTelefono,
+                    email: formData.ceEmail
+                };
+
+                const contactoRes = await axios.post(`${API_GATEWAY}/api/contacto-emergencia`, contactoEmergenciaPayload, {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                contactoId = contactoRes.data.pkId;
+            }
+
+            // Asegurarse de que contactoId no sea undefined y loguearlo antes de la petición final
+            console.log("➡️ ID de contacto a registrar con el paciente:", contactoId);
+
+            // Enviar contactoId al backend
             const payload = {
                 ...formData,
                 fechaNacimiento: formData.fechaNacimiento,
@@ -82,9 +131,10 @@ const RegisterPatientPage = () => {
                 tipoDocumento: formData.tipoDocumento,
                 centroMedico: medico.centroMedico.pkId,
                 urlImagen,
-                password: 'paciente123', // Contraseña temporal asignada automáticamente
+                password: 'paciente123',
                 tipoVinculacionId: formData.tipoVinculacion,
-                rol: 'paciente'
+                rol: 'paciente',
+                contactoEmergencia: { pkId: contactoId } 
             };
 
             await axios.post(`${API_GATEWAY}/api/pacientes/registrar-completo`, payload, {
@@ -149,13 +199,28 @@ const RegisterPatientPage = () => {
                     <option value="O">Otro</option>
                 </select>
 
-                <input id="tipoVinculacion" name="tipoVinculacion" value="TV02" readOnly hidden />
-
-                <label htmlFor="contactoEmergencia">Contacto de Emergencia:</label>
-                <input id="contactoEmergencia" name="contactoEmergencia" placeholder="Contacto de Emergencia" value={formData.contactoEmergencia} onChange={handleChange} required />
-
                 <label htmlFor="fotoPaciente">Foto del Paciente:</label>
                 <input id="fotoPaciente" type="file" accept="image/*" onChange={handleImagen} />
+
+                <h3>Contacto de Emergencia</h3>
+
+                <label htmlFor="ceNombre">Nombre:</label>
+                <input id="ceNombre" name="ceNombre" placeholder="Nombre" value={formData.ceNombre || ''} onChange={handleChange} required />
+
+                <label htmlFor="ceApellido">Apellido:</label>
+                <input id="ceApellido" name="ceApellido" placeholder="Apellido" value={formData.ceApellido || ''} onChange={handleChange} required />
+
+                <label htmlFor="ceRelacion">Relación:</label>
+                <input id="ceRelacion" name="ceRelacion" placeholder="Relación" value={formData.ceRelacion || ''} onChange={handleChange} required />
+
+                <label htmlFor="ceTelefono">Teléfono:</label>
+                <input id="ceTelefono" name="ceTelefono" placeholder="Teléfono" value={formData.ceTelefono || ''} onChange={handleChange} required />
+
+                <label htmlFor="ceDireccion">Dirección:</label>
+                <input id="ceDireccion" name="ceDireccion" placeholder="Dirección" value={formData.ceDireccion || ''} onChange={handleChange} />
+
+                <label htmlFor="ceEmail">Email:</label>
+                <input id="ceEmail" name="ceEmail" placeholder="Email" type="email" value={formData.ceEmail || ''} onChange={handleChange} />
 
                 <button type="submit" style={{ backgroundColor: '#4CAF50', color: 'white', padding: '0.75rem', border: 'none', borderRadius: '6px' }}>
                     Registrar Paciente
