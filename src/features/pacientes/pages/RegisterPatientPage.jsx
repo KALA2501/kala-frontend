@@ -10,16 +10,14 @@ const RegisterPatientPage = () => {
     const [formData, setFormData] = useState({
         nombre: '', apellido: '', tipoDocumento: 'CC', idDocumento: '',
         fechaNacimiento: '', codigoCIE: '', telefono: '', email: '',
-        direccion: '', etapa: 1, zona: '', distrito: '', genero: '', urlImagen: '', tipoVinculacion: ''
+        direccion: '', etapa: 1, genero: '', urlImagen: '', tipoVinculacion: '', contactoEmergencia: ''
     });
     const [mensaje, setMensaje] = useState('');
     const [medico, setMedico] = useState(null);
     const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
     const [tiposVinculacion, setTiposVinculacion] = useState([
-        { pkId: 1, nombre: 'Atendido' },
-        { pkId: 2, nombre: 'Referido' },
-        { pkId: 3, nombre: 'Control permanente' },
-        { pkId: 4, nombre: 'Temporal' }
+        { id: 'TV01', tipo: 'MEDICO', descripcion: 'Vinculación con médico' },
+        { id: 'TV02', tipo: 'PACIENTE', descripcion: 'Vinculación con paciente' }
     ]);
     const navigate = useNavigate();
 
@@ -29,7 +27,8 @@ const RegisterPatientPage = () => {
             if (user) {
                 const token = await user.getIdTokenResult();
                 const correo = user.email;
-                const rol = token.claims.rol; // Obtener el rol del token
+                const rol = token.claims?.role || token.claims?.rol;
+
 
                 if (rol === 'medico') {
                     try {
@@ -105,39 +104,58 @@ const RegisterPatientPage = () => {
             {mensaje && <div style={{ marginBottom: '1rem', color: mensaje.includes('✅') ? 'green' : 'red' }}>{mensaje}</div>}
 
             <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '1rem' }}>
-                <input name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleChange} required />
-                <input name="apellido" placeholder="Apellido" value={formData.apellido} onChange={handleChange} required />
-                <select name="tipoDocumento" value={formData.tipoDocumento} onChange={handleChange}>
+                <label htmlFor="nombre">Nombre:</label>
+                <input id="nombre" name="nombre" placeholder="Nombre" value={formData.nombre} onChange={handleChange} required />
+
+                <label htmlFor="apellido">Apellido:</label>
+                <input id="apellido" name="apellido" placeholder="Apellido" value={formData.apellido} onChange={handleChange} required />
+
+                <label htmlFor="tipoDocumento">Tipo de Documento:</label>
+                <select id="tipoDocumento" name="tipoDocumento" value={formData.tipoDocumento} onChange={handleChange} required>
+                    <option value="">Seleccionar tipo de documento</option>
                     <option value="CC">Cédula de Ciudadanía</option>
                     <option value="TI">Tarjeta de Identidad</option>
                     <option value="CE">Cédula de Extranjería</option>
-                    <option value="PAS">Pasaporte</option>
+                    <option value="PASAPORTE">Pasaporte</option>
+                    <option value="PEP">Permiso Especial de Permanencia</option>
                 </select>
-                <input name="idDocumento" placeholder="Número de Documento" value={formData.idDocumento} onChange={handleChange} required />
-                <input type="date" name="fechaNacimiento" value={formData.fechaNacimiento} onChange={handleChange} required />
-                <input name="codigoCIE" placeholder="Código CIE" value={formData.codigoCIE} onChange={handleChange} />
-                <input name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} required />
-                <input name="email" placeholder="Correo Electrónico" type="email" value={formData.email} onChange={handleChange} required />
-                <input name="direccion" placeholder="Dirección" value={formData.direccion} onChange={handleChange} />
-                <input name="etapa" placeholder="Etapa" type="number" value={formData.etapa} onChange={handleChange} />
-                <input name="zona" placeholder="Zona" value={formData.zona} onChange={handleChange} />
-                <input name="distrito" placeholder="Distrito" value={formData.distrito} onChange={handleChange} />
-                <select name="genero" value={formData.genero} onChange={handleChange}>
+
+                <label htmlFor="idDocumento">Número de Documento:</label>
+                <input id="idDocumento" name="idDocumento" placeholder="Número de Documento" value={formData.idDocumento} onChange={handleChange} required />
+
+                <label htmlFor="fechaNacimiento">Fecha de Nacimiento:</label>
+                <input id="fechaNacimiento" type="date" name="fechaNacimiento" value={formData.fechaNacimiento} onChange={handleChange} required />
+
+                <label htmlFor="codigoCIE">Código CIE:</label>
+                <input id="codigoCIE" name="codigoCIE" placeholder="Código CIE" value={formData.codigoCIE} onChange={handleChange} />
+
+                <label htmlFor="telefono">Teléfono:</label>
+                <input id="telefono" name="telefono" placeholder="Teléfono" value={formData.telefono} onChange={handleChange} required />
+
+                <label htmlFor="email">Correo Electrónico:</label>
+                <input id="email" name="email" placeholder="Correo Electrónico" type="email" value={formData.email} onChange={handleChange} required />
+
+                <label htmlFor="direccion">Dirección:</label>
+                <input id="direccion" name="direccion" placeholder="Dirección" value={formData.direccion} onChange={handleChange} />
+
+                <label htmlFor="etapa">Etapa:</label>
+                <input id="etapa" name="etapa" placeholder="Etapa" type="number" value={formData.etapa} onChange={handleChange} />
+
+                <label htmlFor="genero">Género:</label>
+                <select id="genero" name="genero" value={formData.genero} onChange={handleChange}>
                     <option value="">Seleccionar género</option>
                     <option value="M">Masculino</option>
                     <option value="F">Femenino</option>
                     <option value="O">Otro</option>
                 </select>
 
-                <select name="tipoVinculacion" value={formData.tipoVinculacion} onChange={handleChange} required>
-                    <option value="">Seleccionar tipo de vinculación</option>
-                    {tiposVinculacion.map((tipo) => (
-                        <option key={tipo.pkId} value={tipo.pkId}>{tipo.nombre}</option>
-                    ))}
-                </select>
+                <input id="tipoVinculacion" name="tipoVinculacion" value="TV02" readOnly hidden />
 
-                <label><strong>Foto del paciente:</strong></label>
-                <input type="file" accept="image/*" onChange={handleImagen} />
+                <label htmlFor="contactoEmergencia">Contacto de Emergencia:</label>
+                <input id="contactoEmergencia" name="contactoEmergencia" placeholder="Contacto de Emergencia" value={formData.contactoEmergencia} onChange={handleChange} required />
+
+                <label htmlFor="fotoPaciente">Foto del Paciente:</label>
+                <input id="fotoPaciente" type="file" accept="image/*" onChange={handleImagen} />
 
                 <button type="submit" style={{ backgroundColor: '#4CAF50', color: 'white', padding: '0.75rem', border: 'none', borderRadius: '6px' }}>
                     Registrar Paciente

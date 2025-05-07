@@ -21,7 +21,7 @@ const LoginPage = () => {
             const user = userCredential.user;
 
             const token = await user.getIdTokenResult();
-            const rol = token.claims.rol;
+            const rol = token.claims.role || token.claims.rol;
 
             console.log(token);
             console.log('Rol extraído del token:', rol);
