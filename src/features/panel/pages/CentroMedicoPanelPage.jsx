@@ -148,25 +148,23 @@ const CentroMedicoPanelPage = () => {
                 especialidadFinal = formData.especialidadCustom.trim();
             }
 
-            const medicoAEnviar = {
-                nombre: formData.nombre,
-                apellido: formData.apellido,
-                tipoDocumento: { id: formData.tipoDocumento },
-                idDocumento: formData.idDocumento,
-                fechaNacimiento: new Date(formData.fechaNacimiento + 'T00:00:00')
-                    .toISOString()
-                    .slice(0, 19)
-                    .replace('T', ' '),
-                profesion: 'Médico',
-                especialidad: especialidadFinal,
-                telefono: formData.telefono,
-                direccion: formData.direccion,
-                genero: formData.genero,
-                tarjetaProfesional: formData.tarjetaProfesional,
-                urlImagen: logo,
-                correo: formData.correo,
-                centroMedico: { pkId: centro.pkId }
-            };
+          const medicoAEnviar = {
+            nombre: formData.nombre,
+            apellido: formData.apellido,
+            tipoDocumento: { id: formData.tipoDocumento },
+            idDocumento: formData.idDocumento,
+            fechaNacimiento: new Date(formData.fechaNacimiento + 'T00:00:00').toISOString(), // ✅ Formato ISO correcto
+            profesion: 'Médico',
+            especialidad: especialidadFinal,
+            telefono: formData.telefono,
+            direccion: formData.direccion,
+            genero: formData.genero,
+            tarjetaProfesional: formData.tarjetaProfesional,
+            urlImagen: logo,
+            correo: formData.correo,
+            centroMedico: { pkId: centro.pkId }
+};
+
 
             await axios.post(`${API_GATEWAY}/api/medicos`, medicoAEnviar, {
                 headers: { Authorization: `Bearer ${token}` }

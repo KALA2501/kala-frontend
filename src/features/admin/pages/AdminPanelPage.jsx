@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import AdminNavbar from '../components/AdminNavbar';
 import AdminFooter from '../components/AdminFooter';
+import MenuLateral from '../components/MenuLateral '; // ✅ Se vuelve a incluir
 
 const API_GATEWAY = process.env.REACT_APP_GATEWAY;
 
@@ -88,8 +89,9 @@ const AdminPanelPage = () => {
     const eliminarUsuario = async (uid) => {
         if (!window.confirm('¿Confirmas eliminar este usuario?')) return;
         try {
+            const token = await getAuth().currentUser.getIdToken();
             await axios.delete(`${API_GATEWAY}/api/admin/usuarios-firebase/${uid}`, {
-                headers: { 'Content-Type': 'application/json' }
+                headers: { Authorization: `Bearer ${token}` }
             });
             setMensaje('✅ Usuario eliminado');
             await cargarUsuarios();
@@ -167,149 +169,153 @@ const AdminPanelPage = () => {
     }
 
     return (
-        <div className="flex flex-col min-h-screen bg-[#F5F5F5]">
-            <AdminNavbar adminEmail={adminEmail} onLogout={cerrarSesion} />
+        <div className="flex min-h-screen bg-[#F5F5F5]">
+            <MenuLateral onLogout={cerrarSesion} />
 
-            {mensaje && (
-                <div className={`max-w-6xl mx-auto mt-6 px-6 py-4 rounded-lg ${mensaje.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
-                    {mensaje}
-                </div>
-            )}
+            <div className="flex-1 flex flex-col">
+                <AdminNavbar adminEmail={adminEmail} onLogout={cerrarSesion} />
 
-            <div className="max-w-6xl mx-auto mt-8 flex justify-center gap-4">
-                <button
-                    onClick={() => setActiveTab('usuarios')}
-                    className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'usuarios' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
-                >
-                    Usuarios
-                </button>
-                <button
-                    onClick={() => setActiveTab('solicitudes')}
-                    className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'solicitudes' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
-                >
-                    Solicitudes
-                </button>
-            </div>
-
-            <div className="max-w-6xl mx-auto mt-8 mb-16 px-4">
-                {activeTab === 'usuarios' ? (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-2xl font-bold text-[#30028D] mb-6">Usuarios por Rol</h2>
-                        {Object.entries(usuarios).map(([rol, listaUsuarios]) => (
-                            <div key={rol} className="mb-10">
-                                <h3 className="text-xl font-semibold text-[#7358F5] mb-4 capitalize">
-                                    {rol.replace('_', ' ')} ({listaUsuarios.length})
-                                </h3>
-                                {listaUsuarios.length === 0 ? (
-                                    <p className="text-gray-600">No hay usuarios en este rol.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                                            <thead className="bg-[#F9CFA7]">
-                                                <tr>
-                                                    <th className="py-3 px-6 text-left font-semibold">Email</th>
-                                                    <th className="py-3 px-6 text-left font-semibold">Estado</th>
-                                                    <th className="py-3 px-6 text-left font-semibold">Acciones</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {listaUsuarios.map((usuario) => (
-                                                    <tr key={usuario.uid} className="border-b">
-                                                        <td className="py-3 px-6">{usuario.email}</td>
-                                                        <td className="py-3 px-6">{usuario.disabled ? 'Desactivado' : 'Activo'}</td>
-                                                        <td className="py-3 px-6">
-                                                            <button
-                                                                onClick={() => eliminarUsuario(usuario.uid)}
-                                                                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-4 rounded-lg transition"
-                                                            >
-                                                                Eliminar
-                                                            </button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="bg-white rounded-lg shadow-md p-6">
-                        <h2 className="text-2xl font-bold text-[#30028D] mb-6">Solicitudes de Registro</h2>
-                        {solicitudes.length === 0 ? (
-                            <p className="text-gray-600">No hay solicitudes pendientes.</p>
-                        ) : (
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full bg-white rounded-lg overflow-hidden">
-                                    <thead className="bg-[#F9CFA7]">
-                                        <tr>
-                                            <th className="py-3 px-6 text-left font-semibold">Nombre</th>
-                                            <th className="py-3 px-6 text-left font-semibold">Correo</th>
-                                            <th className="py-3 px-6 text-left font-semibold">Teléfono</th>
-                                            <th className="py-3 px-6 text-left font-semibold">Estado</th>
-                                            <th className="py-3 px-6 text-left font-semibold">Acciones</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {solicitudes.map((solicitud) => (
-                                            <tr key={solicitud.id} className="border-b">
-                                                <td className="py-3 px-6">{solicitud.nombre}</td>
-                                                <td className="py-3 px-6">{solicitud.correo}</td>
-                                                <td className="py-3 px-6">{solicitud.telefono}</td>
-                                                <td className="py-3 px-6">{solicitud.estado}</td>
-                                                <td className="py-3 px-6 flex flex-col md:flex-row gap-2">
-                                                    {!solicitud.procesado ? (
-                                                        <>
-                                                            <select
-                                                                value={rolSeleccionado[solicitud.id] || ''}
-                                                                onChange={(e) =>
-                                                                    setRolSeleccionado((prev) => ({
-                                                                        ...prev,
-                                                                        [solicitud.id]: e.target.value
-                                                                    }))
-                                                                }
-                                                                className="border border-gray-300 rounded-lg p-2"
-                                                            >
-                                                                <option value="">Seleccionar rol</option>
-                                                                <option value="ADMINISTRADOR">Administrador</option>
-                                                                <option value="CENTRO_MEDICO">Centro Médico</option>
-                                                                <option value="MEDICO">Médico</option>
-                                                                <option value="PACIENTE">Paciente</option>
-                                                            </select>
-                                                            <button
-                                                                onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
-                                                                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
-                                                            >
-                                                                Procesar
-                                                            </button>
-                                                        </>
-                                                    ) : (
-                                                        <button
-                                                            onClick={() => revertirSolicitud(solicitud.id)}
-                                                            className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg transition"
-                                                        >
-                                                            Revertir
-                                                        </button>
-                                                    )}
-                                                    <button
-                                                        onClick={() => eliminarSolicitud(solicitud.id)}
-                                                        className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition"
-                                                    >
-                                                        Eliminar
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
+                {mensaje && (
+                    <div className={`max-w-6xl mx-auto mt-6 px-6 py-4 rounded-lg ${mensaje.includes('❌') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                        {mensaje}
                     </div>
                 )}
-            </div>
 
-            <AdminFooter />
+                <div className="max-w-6xl mx-auto mt-8 flex justify-center gap-4">
+                    <button
+                        onClick={() => setActiveTab('usuarios')}
+                        className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'usuarios' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
+                    >
+                        Usuarios
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('solicitudes')}
+                        className={`py-2 px-6 rounded-lg font-semibold transition ${activeTab === 'solicitudes' ? 'bg-[#7358F5] text-white' : 'bg-white text-[#30028D] border border-[#7358F5]'}`}
+                    >
+                        Solicitudes
+                    </button>
+                </div>
+
+                <div className="max-w-6xl mx-auto mt-8 mb-16 px-4">
+                    {activeTab === 'usuarios' ? (
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h2 className="text-2xl font-bold text-[#30028D] mb-6">Usuarios por Rol</h2>
+                            {Object.entries(usuarios).map(([rol, listaUsuarios]) => (
+                                <div key={rol} className="mb-10">
+                                    <h3 className="text-xl font-semibold text-[#7358F5] mb-4 capitalize">
+                                        {rol.replace('_', ' ')} ({listaUsuarios.length})
+                                    </h3>
+                                    {listaUsuarios.length === 0 ? (
+                                        <p className="text-gray-600">No hay usuarios en este rol.</p>
+                                    ) : (
+                                        <div className="overflow-x-auto">
+                                            <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                                <thead className="bg-[#F9CFA7]">
+                                                    <tr>
+                                                        <th className="py-3 px-6 text-left font-semibold">Email</th>
+                                                        <th className="py-3 px-6 text-left font-semibold">Estado</th>
+                                                        <th className="py-3 px-6 text-left font-semibold">Acciones</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {listaUsuarios.map((usuario) => (
+                                                        <tr key={usuario.uid} className="border-b">
+                                                            <td className="py-3 px-6">{usuario.email}</td>
+                                                            <td className="py-3 px-6">{usuario.disabled ? 'Desactivado' : 'Activo'}</td>
+                                                            <td className="py-3 px-6">
+                                                                <button
+                                                                    onClick={() => eliminarUsuario(usuario.uid)}
+                                                                    className="bg-red-500 hover:bg-red-600 text-white font-semibold py-1 px-4 rounded-lg transition"
+                                                                >
+                                                                    Eliminar
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h2 className="text-2xl font-bold text-[#30028D] mb-6">Solicitudes de Registro</h2>
+                            {solicitudes.length === 0 ? (
+                                <p className="text-gray-600">No hay solicitudes pendientes.</p>
+                            ) : (
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full bg-white rounded-lg overflow-hidden">
+                                        <thead className="bg-[#F9CFA7]">
+                                            <tr>
+                                                <th className="py-3 px-6 text-left font-semibold">Nombre</th>
+                                                <th className="py-3 px-6 text-left font-semibold">Correo</th>
+                                                <th className="py-3 px-6 text-left font-semibold">Teléfono</th>
+                                                <th className="py-3 px-6 text-left font-semibold">Estado</th>
+                                                <th className="py-3 px-6 text-left font-semibold">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {solicitudes.map((solicitud) => (
+                                                <tr key={solicitud.id} className="border-b">
+                                                    <td className="py-3 px-6">{solicitud.nombre}</td>
+                                                    <td className="py-3 px-6">{solicitud.correo}</td>
+                                                    <td className="py-3 px-6">{solicitud.telefono}</td>
+                                                    <td className="py-3 px-6">{solicitud.estado}</td>
+                                                    <td className="py-3 px-6 flex flex-col md:flex-row gap-2">
+                                                        {!solicitud.procesado ? (
+                                                            <>
+                                                                <select
+                                                                    value={rolSeleccionado[solicitud.id] || ''}
+                                                                    onChange={(e) =>
+                                                                        setRolSeleccionado((prev) => ({
+                                                                            ...prev,
+                                                                            [solicitud.id]: e.target.value
+                                                                        }))
+                                                                    }
+                                                                    className="border border-gray-300 rounded-lg p-2"
+                                                                >
+                                                                    <option value="">Seleccionar rol</option>
+                                                                    <option value="ADMINISTRADOR">Administrador</option>
+                                                                    <option value="CENTRO_MEDICO">Centro Médico</option>
+                                                                    <option value="MEDICO">Médico</option>
+                                                                    <option value="PACIENTE">Paciente</option>
+                                                                </select>
+                                                                <button
+                                                                    onClick={() => procesarSolicitud(solicitud.id, rolSeleccionado[solicitud.id])}
+                                                                    className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                                >
+                                                                    Procesar
+                                                                </button>
+                                                            </>
+                                                        ) : (
+                                                            <button
+                                                                onClick={() => revertirSolicitud(solicitud.id)}
+                                                                className="bg-yellow-400 hover:bg-yellow-500 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                            >
+                                                                Revertir
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => eliminarSolicitud(solicitud.id)}
+                                                            className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-4 rounded-lg transition"
+                                                        >
+                                                            Eliminar
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <AdminFooter />
+            </div>
         </div>
     );
 };

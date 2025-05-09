@@ -8,7 +8,7 @@ import AdminPanel from './features/admin/pages/AdminPanelPage';
 import DoctorPanelPage from './features/medicos/pages/DoctorPanelPage';
 import RegisterPatientPage from './features/pacientes/pages/RegisterPatientPage';
 import PacientePanelPage from './features/pacientes/pages/PacientePanelPage';
-
+import PacientesActividades from './features/pacientes/pages/PacientesActividades';
 function App() {
   return (
     <Router>
@@ -22,6 +22,8 @@ function App() {
         <Route path="/medico-panel" element={<DoctorPanelPage />} />
         <Route path="/register-patient" element={<RegisterPatientPage />} />
         <Route path="/paciente-panel" element={<PacientePanelPage />} />
+        <Route path="/paciente/juegos" element={<PacientesActividades />} />
+
       </Routes>
     </Router>
   );
