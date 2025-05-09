@@ -153,7 +153,10 @@ const CentroMedicoPanelPage = () => {
                 apellido: formData.apellido,
                 tipoDocumento: { id: formData.tipoDocumento },
                 idDocumento: formData.idDocumento,
-                fechaNacimiento: formData.fechaNacimiento,
+                fechaNacimiento: new Date(formData.fechaNacimiento + 'T00:00:00')
+                    .toISOString()
+                    .slice(0, 19)
+                    .replace('T', ' '),
                 profesion: 'Médico',
                 especialidad: especialidadFinal,
                 telefono: formData.telefono,
