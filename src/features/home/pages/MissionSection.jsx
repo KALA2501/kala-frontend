@@ -1,23 +1,45 @@
-// features/home/pages/MissionSection.jsx
 import React from 'react';
-import abeja2 from '../../../assets/AbejaConMorado.png'; // O la imagen que prefieras
+import { useInView } from 'react-intersection-observer';
+import Lottie from 'lottie-react';
+import beeAnimation from '../../../assets/animations/beeAnimation.json';
 
 const MissionSection = () => {
-    return (
-        <section className="bg-[#7358F5] text-white py-16 px-4 flex flex-col items-center">
-            <div className="max-w-4xl text-center">
-                <h2 className="text-4xl font-bold mb-6">Nuestra Misión</h2>
-                <p className="text-lg leading-relaxed">
-                    Nuestra misión es transformar el cuidado de la salud cognitiva, promoviendo el bienestar, la autonomía
-                    y la esperanza para los adultos mayores, combinando innovación, empatía y tecnología en un entorno accesible
-                    para todos.
-                </p>
-            </div>
-            <div className="mt-10">
-                <img src={abeja2} alt="Misión de KALA" className="w-48 h-48 object-cover rounded-full shadow-lg" />
-            </div>
-        </section>
-    );
+  const { ref, inView } = useInView({
+    triggerOnce: true,
+    threshold: 0.2,
+  });
+
+  return (
+    <section ref={ref} className="bg-purple text-white py-20 px-4">
+      <div className="container max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
+        {/* Texto */}
+        <div className="flex-1 text-left">
+          <span className="text-peach text-sm uppercase tracking-wide font-medium mb-2 block">
+            Una visión con propósito
+          </span>
+          <h2 className="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+            Cuidar la mente, <br /> honrar la vida
+          </h2>
+          <p className="text-lg text-offWhite leading-relaxed">
+            En <strong>KALA</strong>, creemos en un futuro donde los adultos mayores se sientan acompañados,
+            comprendidos y empoderados. Combinamos tecnología, empatía e innovación para brindar soluciones
+            que inspiren autonomía, bienestar y esperanza.
+          </p>
+        </div>
+
+        {/* Animación alineada y grande */}
+        <div className="flex-1 flex justify-center mt-12 md:mt-20">
+          {inView && (
+            <Lottie
+              animationData={beeAnimation}
+              loop={true}
+              className="w-[350px] h-[350px] md:w-[420px] md:h-[420px] scale-110"
+            />
+          )}
+        </div>
+      </div>
+    </section>
+  );
 };
 
 export default MissionSection;
