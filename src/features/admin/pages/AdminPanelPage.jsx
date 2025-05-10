@@ -12,7 +12,7 @@ const API_GATEWAY = process.env.REACT_APP_GATEWAY;
 const AdminPanelPage = () => {
     const [usuarios, setUsuarios] = useState({
         centro_medico: [],
-        doctor: [],
+        medico: [],
         paciente: []
     });
     const [solicitudes, setSolicitudes] = useState([]);
@@ -53,9 +53,11 @@ const AdminPanelPage = () => {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const raw = res.data.usuariosPorRol;
+            console.log('Usuarios por rol:', raw); // 👈 Verifica qué devuelve el backend
+
             setUsuarios({
                 centro_medico: raw?.['centro_medico'] ?? [],
-                doctor: raw?.['medico'] ?? [],
+                medico: raw?.['medico'] ?? [],
                 paciente: raw?.['paciente'] ?? []
             });
         } catch (error) {
@@ -112,7 +114,7 @@ const AdminPanelPage = () => {
             switch (rol) {
                 case 'CENTRO_MEDICO': rolFormateado = 'centro_medico'; break;
                 case 'PACIENTE': rolFormateado = 'paciente'; break;
-                case 'MEDICO': rolFormateado = 'doctor'; break;
+                case 'MEDICO': rolFormateado = 'medico'; break;
                 case 'ADMINISTRADOR': rolFormateado = 'admin'; break;
                 default: rolFormateado = rol.toLowerCase(); break;
             }
