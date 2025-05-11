@@ -90,7 +90,9 @@ const RegistroPacienteSoft = () => {
                 genero: formData.genero,
                 urlImagen,
                 contactoEmergencia: { pkId: contactoId },
-                centroMedico: { pkId: medico?.centroMedico?.pkId }
+                centroMedico: { pkId: medico?.centroMedico?.pkId },
+                medico: { pkId: medico?.pkId },
+                tipoVinculacion: { id: "TV02" } // 🔥 quemado fijo
             };
 
             console.log("🧪 Payload enviado:", JSON.stringify(payload, null, 2));
