@@ -1,134 +1,125 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { getAuth, onAuthStateChanged, signOut } from 'firebase/auth';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import MenuLateralMedico from './components/MenuLateralMedico';
 
 const API_GATEWAY = process.env.REACT_APP_GATEWAY;
 
 const DoctorPanelPage = () => {
-    const navigate = useNavigate();
-    const [doctorImage, setDoctorImage] = useState('');
-    const [pacientes, setPacientes] = useState([]);
-    const [medicoId, setMedicoId] = useState('');
-    const [medico, setMedico] = useState(null); // ✅ Estado para guardar el objeto del médico
+  const navigate = useNavigate();
+  const [doctorImage, setDoctorImage] = useState('');
+  const [pacientes, setPacientes] = useState([]);
+  const [medicoId, setMedicoId] = useState('');
+  const [medico, setMedico] = useState(null);
 
-    useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const email = user.email;
-                try {
-                    const token = await user.getIdToken();
-                    const res = await axios.get(
-                        `${API_GATEWAY}/api/medicos/buscar-por-correo?correo=${encodeURIComponent(email)}`,
-                        {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        }
-                    );
-                    console.log("📦 Respuesta completa:", res.data);
-                    const doctorData = res.data;
-                    setDoctorImage(doctorData.urlImagen);
-                    setMedicoId(doctorData.pkId);
-                    setMedico(doctorData); // ✅ Guardamos el objeto completo del médico
-                } catch (error) {
-                    console.error('❌ Error al obtener los detalles del médico:', error);
-                }
-            } else {
-                console.error('❌ Usuario no autenticado');
-            }
-        });
-        return () => unsubscribe();
-    }, []);
-
-    useEffect(() => {
-        const fetchPacientes = async () => {
-            const auth = getAuth();
-            const user = auth.currentUser;
-            if (user) {
-                const token = await user.getIdToken();
-                try {
-                    const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-                    setPacientes(res.data);
-                } catch (err) {
-                    console.error('Error al obtener pacientes:', err);
-                }
-            }
-        };
-
-        fetchPacientes();
-    }, []);
-
-    const handleDelete = async (id) => {
-        if (window.confirm("¿Estás seguro de que deseas eliminar esta vinculación?")) {
-            const auth = getAuth();
-            const user = auth.currentUser;
-            if (user) {
-                const token = await user.getIdToken();
-                try {
-                    if (medicoId && id) {
-                        await axios.delete(`${API_GATEWAY}/api/vinculacion?pacienteId=${id}&medicoId=${medicoId}`, {
-                            headers: {
-                                Authorization: `Bearer ${token}`,
-                            },
-                        });
-                        setPacientes((prevPacientes) => prevPacientes.filter((p) => p.pkId !== id));
-                        alert("Vinculación eliminada exitosamente");
-                    } else {
-                        console.error("❌ El ID del médico o paciente está indefinido");
-                    }
-                } catch (err) {
-                    console.error("❌ Error al eliminar vinculación:", err.response || err);
-                    alert("Error al eliminar vinculación");
-                }
-            }
-        }
-    };
-
-    const handleLogout = async () => {
-        const auth = getAuth();
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
         try {
-            await signOut(auth);
-            navigate('/');
-        } catch (error) {
-            console.error('Error al cerrar sesión:', error);
+          const token = await user.getIdToken();
+          const res = await axios.get(`${API_GATEWAY}/api/medicos/buscar-por-correo?correo=${encodeURIComponent(user.email)}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          const doctorData = res.data;
+          setDoctorImage(doctorData.urlImagen);
+          setMedicoId(doctorData.pkId);
+          setMedico(doctorData);
+        } catch (err) {
+          console.error('❌ Error obteniendo médico:', err);
         }
+      }
+    });
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const fetchPacientes = async () => {
+      const auth = getAuth();
+      const user = auth.currentUser;
+      if (user && medicoId) {
+        const token = await user.getIdToken();
+        try {
+          const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico/${medicoId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          setPacientes(res.data);
+        } catch (err) {
+          console.error('❌ Error obteniendo pacientes:', err);
+        }
+      }
     };
+    fetchPacientes();
+  }, [medicoId]);
 
-    return (
-        <div style={{ padding: '2rem', textAlign: 'center' }}>
-            <h1>Bienvenido al panel del médico</h1>
-            {doctorImage && <img src={doctorImage} alt="Doctor" style={{ width: '150px', borderRadius: '50%' }} />}
-            <button
-                style={{ marginTop: '1rem', padding: '0.5rem 1rem', fontSize: '1rem' }}
-                onClick={() => navigate('/register-patient', { state: { medico } })} // ✅ Usamos el estado `medico`
-            >
-                Agregar Paciente
-            </button>
-
-            <h2>Lista de Pacientes</h2>
-            <ul>
-                {pacientes.map((paciente) => (
-                    <li key={paciente.pkId}>
-                        {paciente.nombre} {paciente.apellido}
-                        <button onClick={() => handleDelete(paciente.pkId)}>Eliminar</button>
-                    </li>
-                ))}
-            </ul>
-
-            <button
-                style={{ marginTop: '1rem', padding: '0.5rem 1rem', fontSize: '1rem', backgroundColor: 'red', color: 'white', border: 'none', borderRadius: '5px' }}
-                onClick={handleLogout}
-            >
-                Cerrar Sesión
-            </button>
+  return (
+    <div className="flex min-h-screen bg-gray-100">
+      <MenuLateralMedico />
+      <main className="flex-1 p-8 space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-[#30028D]">Bienvenido, {medico?.nombre}</h1>
+          {doctorImage && (
+            <img src={doctorImage} alt="Perfil" className="w-16 h-16 rounded-full object-cover border" />
+          )}
         </div>
-    );
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-xl shadow p-4 col-span-1 md:col-span-2">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-lg font-semibold text-[#30028D]">Resultados Recientes</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-gray-700">
+                <thead className="bg-gray-100">
+                  <tr>
+                    <th className="p-2 text-left">Nombre</th>
+                    <th className="p-2 text-left">Etapa</th>
+                    <th className="p-2 text-left">Actividad</th>
+                    <th className="p-2 text-left">Errores</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pacientes.slice(0, 5).map((paciente) => (
+                    <tr key={paciente.pkId} className="border-b hover:bg-gray-50">
+                      <td className="p-2 flex items-center gap-2">
+                        <img src={paciente.urlImagen || 'https://via.placeholder.com/32'} alt="Paciente" className="w-8 h-8 rounded-full object-cover" />
+                        <span className="font-medium">{paciente.nombre}</span>
+                      </td>
+                      <td className="p-2">{paciente.etapa || '-'}</td>
+                      <td className="p-2">Pastillero</td>
+                      <td className="p-2">5</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl shadow p-4">
+            <h2 className="text-lg font-semibold text-[#30028D] mb-2">Pacientes activos</h2>
+            <p className="text-5xl font-bold text-green-600">{pacientes.length}</p>
+            <p className="text-sm text-gray-500">Pacientes registrados a tu cargo</p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-6 flex flex-wrap gap-4 justify-center">
+          <button
+            onClick={() => navigate('/register-patient', { state: { medico } })}
+            className="bg-[#7358F5] hover:bg-[#30028D] text-white py-2 px-4 rounded-lg transition"
+          >
+            ➕ Registrar Paciente
+          </button>
+          <button
+            onClick={() => navigate('/lawton-reportes')}
+            className="bg-[#28A745] hover:bg-[#1E7E34] text-white py-2 px-4 rounded-lg transition"
+          >
+            📄 Ver Reportes Lawton
+          </button>
+        </div>
+      </main>
+    </div>
+  );
 };
 
 export default DoctorPanelPage;

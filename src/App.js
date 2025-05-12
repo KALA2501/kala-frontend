@@ -9,6 +9,14 @@ import DoctorPanelPage from './features/medicos/pages/DoctorPanelPage';
 import RegisterPatientPage from './features/pacientes/pages/RegisterPatientPage';
 import PacientePanelPage from './features/pacientes/pages/PacientePanelPage';
 import PacientesActividades from './features/pacientes/pages/PacientesActividades';
+import LawtonFormPage from './features/medicos/pages/LawtonForm';
+import LawtonViewPage from './features/medicos/pages/LawtonViewPage';
+import LawtonReportPage from './features/medicos/pages/LawtonReportPage';
+import FormulariosPage from './features/medicos/pages/FormulariosPage';
+import DadFormPage from './features/medicos/pages/DadFormPage';
+import FaqFormPage from './features/medicos/pages/FaqFormPage';
+import FaqViewPage from './features/medicos/pages/FaqViewPage';
+import DadViewPage from './features/medicos/pages/DadViewPage';
 function App() {
   return (
     <Router>
@@ -23,7 +31,14 @@ function App() {
         <Route path="/register-patient" element={<RegisterPatientPage />} />
         <Route path="/paciente-panel" element={<PacientePanelPage />} />
         <Route path="/paciente/juegos" element={<PacientesActividades />} />
-
+        <Route path="/lawton-form" element={<LawtonFormPage />} />
+        <Route path="/lawton-view/:pacienteId" element={<LawtonViewPage />} />
+        <Route path="/lawton-reportes" element={<LawtonReportPage />} />
+        <Route path="/formularios" element={<FormulariosPage />} />
+        <Route path="/dad-form" element={<DadFormPage />} />
+        <Route path="/faq-form" element={<FaqFormPage />} /> 
+        <Route path="/faq-view/:pacienteId" element={<FaqViewPage />} /> 
+        <Route path="/dad-view/:pacienteId" element={<DadViewPage />} />
       </Routes>
     </Router>
   );

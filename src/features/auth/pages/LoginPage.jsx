@@ -3,7 +3,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { auth } from '../../../services/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
-import loginAnimation from '../../../assets/animations/login-animation.json';
+import loginAnimation from '../../../assets/animations/login-animation2.json';
 
 import logoKala from '../../../assets/LogoKala.png';
 
