@@ -14,44 +14,48 @@ const PacientePanelPage = () => {
     const [medicos, setMedicos] = useState([]);
 
     useEffect(() => {
-        const auth = getAuth();
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-            if (user) {
-                const email = user.email;
-                try {
-                    const token = await user.getIdToken();
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            try {
+                const token = await user.getIdToken();
 
-                    if (!token || token.split('.').length !== 3) {
-                        throw new Error("Token JWT inválido o malformado");
-                    }
-
-                    const res = await axios.get(
-                        `${API_GATEWAY}/api/pacientes/buscar-por-correo?email=${encodeURIComponent(email)}`,
-                        {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }
-                    );
-                    const pacienteData = res.data;
-                    setPacienteImage(pacienteData.urlImagen);
-                    setPacienteNombre(pacienteData.nombre);
-
-                    const medicosRes = await axios.get(
-                        `${API_GATEWAY}/api/pacientes/${pacienteData.pkId}/medicos`,
-                        {
-                            headers: { Authorization: `Bearer ${token}` },
-                        }
-                    );
-                    setMedicos(medicosRes.data);
-                } catch (error) {
-                    console.error('Error:', error);
+                if (!token || token.split('.').length !== 3) {
+                    throw new Error("Token JWT inválido o malformado");
                 }
-            } else {
-                console.error('Usuario no autenticado');
-            }
-        });
 
-        return () => unsubscribe();
-    }, []);
+                // Paso 1: Obtener el ID del paciente
+                const idRes = await axios.get(
+                    `${API_GATEWAY}/api/pacientes/mi-perfil`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                const pacienteId = idRes.data;
+
+                // Paso 2: Obtener los datos del paciente usando su ID
+                const res = await axios.get(
+                    `${API_GATEWAY}/api/pacientes/${pacienteId}`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                const pacienteData = res.data;
+                setPacienteImage(pacienteData.urlImagen);
+                setPacienteNombre(pacienteData.nombre);
+
+                // Paso 3: Obtener médicos vinculados
+                const medicosRes = await axios.get(
+                    `${API_GATEWAY}/api/pacientes/${pacienteId}/medicos`,
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+                setMedicos(medicosRes.data);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        } else {
+            console.error('Usuario no autenticado');
+        }
+    });
+
+    return () => unsubscribe();
+}, []);
 
     const handleLogout = () => {
         const auth = getAuth();
