@@ -14,9 +14,12 @@ module.exports = {
     },
     extend: {
       colors: {
-        purple: "#C7B8EA",
-        peach: "#FFEEDD",
-        offWhite: "#F8F8F8",
+        // 🎨 Colores personalizados con más intensidad
+        purple: "#A694E0",      // Antes: #C7B8EA
+        peach: "#FFD2B8",       // Antes: #FFEEDD
+        offWhite: "#F0F0F0",    // Antes: #F8F8F8
+
+        // 🌈 Colores derivados con variables HSL para temas dinámicos
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

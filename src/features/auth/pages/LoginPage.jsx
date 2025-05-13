@@ -3,8 +3,7 @@ import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/aut
 import { auth } from '../../../services/firebaseConfig';
 import { useNavigate } from 'react-router-dom';
 import Lottie from 'lottie-react';
-import loginAnimation from '../../../assets/animations/login-animation2.json';
-
+import loginAnimation from '../../../assets/animations/login-animation4.json';
 import logoKala from '../../../assets/LogoKala.png';
 
 const LoginPage = () => {
@@ -45,9 +44,9 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col md:flex-row bg-white">
+    <div className="min-h-screen flex flex-col md:flex-row bg-offWhite">
       {/* Animación Lottie */}
-      <div className="w-full md:w-1/2 bg-[#F4F0FF] flex items-center justify-center p-8">
+      <div className="w-full md:w-1/2 bg-purple flex items-center justify-center p-8">
         <Lottie animationData={loginAnimation} loop={true} className="w-full max-w-md" />
       </div>
 
@@ -63,7 +62,7 @@ const LoginPage = () => {
             />
           </div>
 
-          <h2 className="text-4xl font-extrabold text-[#30028D] text-center mb-10">Iniciar Sesión</h2>
+          <h2 className="text-4xl font-extrabold text-purple text-center mb-10">Iniciar Sesión</h2>
 
           <form onSubmit={handleLogin} className="space-y-6">
             <input
@@ -71,7 +70,7 @@ const LoginPage = () => {
               placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7358F5]"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple"
             />
 
             <div className="relative">
@@ -80,12 +79,12 @@ const LoginPage = () => {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#7358F5]"
+                className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 text-sm"
               >
                 {showPassword ? 'Ocultar' : 'Ver'}
               </button>
@@ -93,7 +92,7 @@ const LoginPage = () => {
 
             <button
               type="submit"
-              className="w-full bg-[#7358F5] hover:bg-[#30028D] text-white font-semibold py-3 rounded-lg transition"
+              className="w-full bg-purple hover:bg-purple/80 text-white font-semibold py-3 rounded-lg transition"
             >
               Iniciar sesión
             </button>
@@ -102,7 +101,7 @@ const LoginPage = () => {
           <div className="text-center mt-4">
             <button
               onClick={() => setShowReset(!showReset)}
-              className="text-sm text-[#7358F5] hover:text-[#30028D] underline"
+              className="text-sm text-purple hover:text-purple/80 underline"
             >
               ¿Olvidaste tu contraseña?
             </button>
@@ -112,18 +111,22 @@ const LoginPage = () => {
             <div className="mt-4 text-center">
               <button
                 onClick={handleResetPassword}
-                className="bg-[#7358F5] hover:bg-[#30028D] text-white font-semibold py-2 px-6 rounded-lg transition"
+                className="bg-purple hover:bg-purple/80 text-white font-semibold py-2 px-6 rounded-lg transition"
               >
                 Enviar correo de recuperación
               </button>
-              {resetSent && <p className="text-green-600 mt-2">¡Correo enviado! Revisa tu bandeja de entrada.</p>}
+              {resetSent && (
+                <p className="text-green-600 mt-2">
+                  ¡Correo enviado! Revisa tu bandeja de entrada.
+                </p>
+              )}
             </div>
           )}
 
           <div className="text-center mt-6">
             <button
               onClick={() => navigate('/')}
-              className="text-sm text-[#7358F5] hover:text-[#30028D] underline"
+              className="text-sm text-purple hover:text-purple/80 underline"
             >
               Volver al inicio
             </button>
