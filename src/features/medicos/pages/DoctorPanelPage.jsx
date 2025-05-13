@@ -10,7 +10,6 @@ const DoctorPanelPage = () => {
   const navigate = useNavigate();
   const [doctorImage, setDoctorImage] = useState('');
   const [pacientes, setPacientes] = useState([]);
-  const [medicoId, setMedicoId] = useState('');
   const [medico, setMedico] = useState(null);
 
   useEffect(() => {
@@ -24,7 +23,6 @@ const DoctorPanelPage = () => {
           });
           const doctorData = res.data;
           setDoctorImage(doctorData.urlImagen);
-          setMedicoId(doctorData.pkId);
           setMedico(doctorData);
         } catch (err) {
           console.error('❌ Error obteniendo médico:', err);
@@ -38,10 +36,10 @@ const DoctorPanelPage = () => {
     const fetchPacientes = async () => {
       const auth = getAuth();
       const user = auth.currentUser;
-      if (user && medicoId) {
+      if (user) {
         const token = await user.getIdToken();
         try {
-          const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico/${medicoId}`, {
+          const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           setPacientes(res.data);
@@ -51,7 +49,7 @@ const DoctorPanelPage = () => {
       }
     };
     fetchPacientes();
-  }, [medicoId]);
+  }, [medico]);
 
   return (
     <div className="flex min-h-screen bg-gray-100">

@@ -31,37 +31,36 @@ const FormulariosPage = () => {
     return () => unsubscribe();
   }, []);
 
-  useEffect(() => {
-    const fetchPacientes = async () => {
-      if (!medicoId) return;
-      const auth = getAuth();
-      const token = await auth.currentUser.getIdToken();
-      const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico/${medicoId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setPacientes(res.data);
+useEffect(() => {
+  const fetchPacientes = async () => {
+    if (!medicoId) return;
+    const auth = getAuth();
+    const token = await auth.currentUser.getIdToken();
+    const res = await axios.get(`${API_GATEWAY}/api/pacientes/del-medico`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    setPacientes(res.data);
 
-      const status = {};
-      for (const paciente of res.data) {
-        const id = paciente.pkId;
+    const status = {};
+    for (const paciente of res.data) {
+      const id = paciente.pkId;
+      const [lawton, dad, faq] = await Promise.allSettled([
+        axios.get(`${API_GATEWAY}/api/formularios/lawton/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_GATEWAY}/api/formularios/dad/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get(`${API_GATEWAY}/api/formularios/faq/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
+      ]);
+      status[id] = {
+        lawton: lawton.status === 'fulfilled',
+        dad: dad.status === 'fulfilled',
+        faq: faq.status === 'fulfilled',
+      };
+    }
+    setCompletados(status);
+  };
 
-        const [lawton, dad, faq] = await Promise.allSettled([
-          axios.get(`${API_GATEWAY}/api/formularios/lawton/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_GATEWAY}/api/formularios/dad/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-          axios.get(`${API_GATEWAY}/api/formularios/faq/${id}`, { headers: { Authorization: `Bearer ${token}` } }),
-        ]);
+  fetchPacientes();
+}, [medicoId]);
 
-        status[id] = {
-          lawton: lawton.status === 'fulfilled',
-          dad: dad.status === 'fulfilled',
-          faq: faq.status === 'fulfilled',
-        };
-      }
-      setCompletados(status);
-    };
-
-    fetchPacientes();
-  }, [medicoId]);
 
   const handleClick = (ruta, pacienteId) => {
     navigate(ruta, { state: { pacienteId, medicoId } });
