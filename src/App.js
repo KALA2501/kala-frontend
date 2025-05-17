@@ -17,6 +17,7 @@ import DadFormPage from './features/medicos/pages/DadFormPage';
 import FaqFormPage from './features/medicos/pages/FaqFormPage';
 import FaqViewPage from './features/medicos/pages/FaqViewPage';
 import DadViewPage from './features/medicos/pages/DadViewPage';
+import MetricsPage from './features/medicos/pages/MetricsPage';
 function App() {
   return (
     <Router>
@@ -39,6 +40,7 @@ function App() {
         <Route path="/faq-form" element={<FaqFormPage />} /> 
         <Route path="/faq-view/:pacienteId" element={<FaqViewPage />} /> 
         <Route path="/dad-view/:pacienteId" element={<DadViewPage />} />
+        <Route path="/metrics" element={<MetricsPage />} />
       </Routes>
     </Router>
   );
