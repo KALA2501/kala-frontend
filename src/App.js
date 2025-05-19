@@ -20,6 +20,9 @@ import DadViewPage from './features/medicos/pages/DadViewPage';
 import MetricsPage from './features/medicos/pages/MetricsPage';
 import SeleccionActividadPage from './features/medicos/pages/SeleccionActividadPage';
 import DesempenoIndividualPage from './features/medicos/pages/DesempenoIndividualPage';
+import JuegoCubiertosPage from './features/pacientes/pages/Juegos/JuegoCubiertosPage';
+import JuegoCajeroPage from './features/pacientes/pages/Juegos/JuegoCajeroPage';
+import JuegoMercadoPage from './features/pacientes/pages/Juegos/JuegoMercadoPage';
 function App() {
   return (
     <Router>
@@ -45,6 +48,9 @@ function App() {
         <Route path="/metrics" element={<SeleccionActividadPage />} />
         <Route path="/metrics/:actividad" element={<MetricsPage />} />
         <Route path="/metrics/:actividad/desempeno-individual" element={<DesempenoIndividualPage />} />
+        <Route path="/jugar/cubiertos" element={<JuegoCubiertosPage />} />
+        <Route path="/jugar/cajero" element={<JuegoCajeroPage />} />
+        <Route path="/jugar/mercado" element={<JuegoMercadoPage />} />
       </Routes>
     </Router>
   );
