@@ -29,6 +29,12 @@ const MetricsPage = () => {
   const [erroresCantidad, setErroresCantidad] = useState([]);
   const [tiempoLista, setTiempoLista] = useState([]);
 
+  // Cubiertos
+  const [erroresCubiertos, setErroresCubiertos] = useState([]);
+  const [erroresPlato, setErroresPlato] = useState([]);
+  const [tiempoCubiertos, setTiempoCubiertos] = useState([]);
+
+
   const colores = [
     "#A694E0", "#7358F5", "#E08B8B", "#FFB347", "#28A745",
     "#7DB9B6", "#D5718F", "#FF6384", "#36A2EB", "#FFCE56"
@@ -56,6 +62,10 @@ const MetricsPage = () => {
             { key: 'erroresCantidad', url: `/mercado/errores-cantidad/${medicoId}` },
             { key: 'tiempoLista', url: `/mercado/tiempo-lista/${medicoId}` }
           ];
+        } else if (actividad === 'cubiertos') {
+          endpoints = [
+            { key: 'erroresCubiertos', url: `/cubiertos/general/${medicoId}` }
+          ];
         }
 
         for (const ep of endpoints) {
@@ -72,6 +82,11 @@ const MetricsPage = () => {
             case 'precisionItems': setPrecisionItems(res.data); break;
             case 'erroresCantidad': setErroresCantidad(res.data); break;
             case 'tiempoLista': setTiempoLista(res.data); break;
+            case 'erroresCubiertos':
+              setErroresCubiertos(res.data.erroresPorCubierto || []);
+              setErroresPlato(res.data.erroresPorPlato || []);
+              setTiempoCubiertos(res.data.tiempoPromedio || []);
+              break;
             default: break;
           }
         }
@@ -162,6 +177,25 @@ const MetricsPage = () => {
             <MetricChart title="Cantidad Incorrecta Promedio" data={erroresCantidad} dataKey="cantidad_incorrecta_prom" fill="#36A2EB" />
           </>
         )}
+
+        {actividad === 'cubiertos' && (
+          <>
+            <div className="flex justify-between items-center mb-4">
+              <h1 className="text-3xl font-bold text-purple">Métricas Cognitivas - Cubiertos</h1>
+              <button onClick={() => navigate('/metrics/cubiertos/desempeno-individual')} className="bg-purple text-white px-4 py-2 rounded-lg shadow hover:bg-purple-700 transition">Ver Desempeño Individual</button>
+            </div>
+            <MetricChart title="Errores con Cuchillo por Paciente" data={erroresCubiertos} dataKey="cuchillo" fill="#7358F5" />
+            <MetricChart title="Errores con Cuchara por Paciente" data={erroresCubiertos} dataKey="cuchara" fill="#FFB347" />
+            <MetricChart title="Errores con Tenedor por Paciente" data={erroresCubiertos} dataKey="tenedor" fill="#E08B8B" />
+
+            <MetricChart title="Errores con Pizza por Paciente" data={erroresPlato} dataKey="pizza" fill="#FF6384" />
+            <MetricChart title="Errores con Sopa por Paciente" data={erroresPlato} dataKey="sopa" fill="#7DB9B6" />
+            <MetricChart title="Errores con Ramen por Paciente" data={erroresPlato} dataKey="ramen" fill="#36A2EB" />
+
+            <MetricChart title="Tiempo Promedio por Paciente (Cubiertos)" data={tiempoCubiertos} dataKey="tiempo_promedio" fill="#A694E0" />
+          </>
+        )}
+        
       </div>
     </div>
   );

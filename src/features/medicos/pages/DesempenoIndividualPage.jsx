@@ -9,6 +9,33 @@ import {
 
 const API_METRICAS = 'http://localhost:9099/api/metricas';
 
+const normalizeMetricas = (data) => {
+  const parseFecha = (f) => new Date(f).toISOString().split('T')[0];
+
+  return {
+    historialTiempo: (data.historialTiempo || []).map(d => ({
+      fecha: parseFecha(d.fecha),
+      tiempo_promedio: parseFloat(d.tiempo_promedio)
+    })),
+    erroresPorSesion: (data.erroresPorSesion || []).map(d => ({
+      fecha: parseFecha(d.fecha),
+      errores_totales: parseInt(d.errores_totales)
+    })),
+    erroresPorCubierto: (data.erroresPorCubierto || []).map(d => ({
+      paciente_id: d.paciente_id,
+      cuchillo: parseInt(d.cuchillo),
+      cuchara: parseInt(d.cuchara),
+      tenedor: parseInt(d.tenedor)
+    })),
+    erroresPorPlato: (data.erroresPorPlato || []).map(d => ({
+      paciente_id: d.paciente_id,
+      pizza: parseInt(d.pizza),
+      sopa: parseInt(d.sopa),
+      ramen: parseInt(d.ramen)
+    }))
+  };
+};
+
 const DesempenoIndividualPage = () => {
   const { actividad } = useParams();
   const [medicoId] = useState('M001'); // Más adelante lo extraes del token
@@ -33,23 +60,29 @@ const DesempenoIndividualPage = () => {
   }, [medicoId]);
 
   useEffect(() => {
-    if (!pacienteSeleccionado) return;
+  if (!pacienteSeleccionado) return;
 
-    const fetchMetricas = async () => {
-      try {
-        const endpoint = actividad === 'cajero'
-          ? `/paciente/${pacienteSeleccionado}/detalles`
-          : `/paciente/${pacienteSeleccionado}/mercado-detalles`;
+  const fetchMetricas = async () => {
+    try {
+      const endpoint = actividad === 'cajero'
+        ? `/paciente/${pacienteSeleccionado}/detalles`
+        : actividad === 'mercado'
+        ? `/paciente/${pacienteSeleccionado}/mercado-detalles`
+        : `/paciente/${pacienteSeleccionado}/cubiertos-detalles`;
 
-        const res = await axios.get(`${API_METRICAS}${endpoint}`);
+      const res = await axios.get(`${API_METRICAS}${endpoint}`);
+      if (actividad === 'cubiertos') {
+        setMetricas(normalizeMetricas(res.data));
+      } else {
         setMetricas(res.data);
-      } catch (error) {
-        console.error('Error cargando métricas individuales:', error);
       }
-    };
+    } catch (error) {
+      console.error('Error cargando métricas individuales:', error);
+    }
+  };
 
-    fetchMetricas();
-  }, [pacienteSeleccionado, actividad]);
+  fetchMetricas();
+}, [pacienteSeleccionado, actividad]);
 
   return (
     <div className="flex min-h-screen bg-[#F8F8F8]">
@@ -179,7 +212,72 @@ const DesempenoIndividualPage = () => {
           </>
         )}
 
-        {actividad !== 'cajero' && actividad !== 'mercado' && (
+        {/* === CUBIERTOS === */}
+        {actividad === 'cubiertos' && (
+          <>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Evolución del Tiempo (Cubiertos)</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.historialTiempo || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="tiempo_promedio" stroke="#7358F5" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Errores Totales por Día</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.erroresPorSesion || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="errores_totales" stroke="#E08B8B" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Errores por Cubierto</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metricas.erroresPorCubierto ? [metricas.erroresPorCubierto[0]] : []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="paciente_id" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="cuchillo" fill="#7358F5" />
+                  <Bar dataKey="cuchara" fill="#FFB347" />
+                  <Bar dataKey="tenedor" fill="#E08B8B" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Errores por Plato</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metricas.erroresPorPlato ? [metricas.erroresPorPlato[0]] : []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="paciente_id" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="pizza" fill="#FF6384" />
+                  <Bar dataKey="sopa" fill="#7DB9B6" />
+                  <Bar dataKey="ramen" fill="#36A2EB" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
+
+        {actividad !== 'cajero' && actividad !== 'mercado' && actividad !== 'cubiertos' && (
           <div className="text-center text-gray-600 text-lg mt-10">
             ⚠️ Aún no hay métricas individuales disponibles para esta actividad.
           </div>
