@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 import MenuLateralMedico from './components/MenuLateralMedico';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -9,7 +10,8 @@ import {
 const API_METRICAS = 'http://localhost:9099/api/metricas';
 
 const DesempenoIndividualPage = () => {
-  const [medicoId] = useState('M001');
+  const { actividad } = useParams();
+  const [medicoId] = useState('M001'); // Más adelante lo extraes del token
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [metricas, setMetricas] = useState({});
@@ -20,7 +22,7 @@ const DesempenoIndividualPage = () => {
         const res = await axios.get(`${API_METRICAS}/pacientes-vinculados/${medicoId}`);
         setPacientes(res.data);
         if (res.data.length > 0) {
-          setPacienteSeleccionado(res.data[0].paciente_id); // <- clave correcta
+          setPacienteSeleccionado(res.data[0].paciente_id);
         }
       } catch (error) {
         console.error('Error cargando pacientes:', error);
@@ -32,9 +34,14 @@ const DesempenoIndividualPage = () => {
 
   useEffect(() => {
     if (!pacienteSeleccionado) return;
+
     const fetchMetricas = async () => {
       try {
-        const res = await axios.get(`${API_METRICAS}/paciente/${pacienteSeleccionado}/detalles`);
+        const endpoint = actividad === 'cajero'
+          ? `/paciente/${pacienteSeleccionado}/detalles`
+          : `/paciente/${pacienteSeleccionado}/mercado-detalles`;
+
+        const res = await axios.get(`${API_METRICAS}${endpoint}`);
         setMetricas(res.data);
       } catch (error) {
         console.error('Error cargando métricas individuales:', error);
@@ -42,7 +49,7 @@ const DesempenoIndividualPage = () => {
     };
 
     fetchMetricas();
-  }, [pacienteSeleccionado]);
+  }, [pacienteSeleccionado, actividad]);
 
   return (
     <div className="flex min-h-screen bg-[#F8F8F8]">
@@ -65,63 +72,118 @@ const DesempenoIndividualPage = () => {
           </select>
         </div>
 
-        {/* Gráfica 1 */}
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Evolución del Tiempo (Identificación de Dinero)</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metricas.evolucionTiempo || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="denominacion" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="tiempo" stroke="#7358F5" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+        {/* === CAJERO === */}
+        {actividad === 'cajero' && (
+          <>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Evolución del Tiempo (Identificación de Dinero)</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.evolucionTiempo || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="denominacion" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="tiempo" stroke="#7358F5" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
 
-        {/* Gráfica 2 */}
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Errores por Denominación</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={metricas.erroresDenominacion || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="denominacion" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="errores" fill="#E08B8B" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Errores por Denominación</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metricas.erroresDenominacion || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="denominacion" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="errores" fill="#E08B8B" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
 
-        {/* Gráfica 3 */}
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Historial de Actividades</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={metricas.actividadesHistorial || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="fecha" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line type="monotone" dataKey="cantidad" stroke="#28A745" />
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Historial de Actividades</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.actividadesHistorial || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="cantidad" stroke="#28A745" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
 
-        {/* Gráfica 4 */}
-        <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Precisión al Devolver Cambio</h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={metricas.precisionCambio || []}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="monto" />
-              <YAxis />
-              <Tooltip />
-              <Bar dataKey="correcto" fill="#FFB347" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Precisión al Devolver Cambio</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metricas.precisionCambio || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="monto" />
+                  <YAxis />
+                  <Tooltip />
+                  <Bar dataKey="correcto" fill="#FFB347" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
+
+        {/* === MERCADO === */}
+        {actividad === 'mercado' && (
+          <>
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Historial de Actividades</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.historialActividades || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="cantidad" stroke="#28A745" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Evolución del Tiempo Total</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={metricas.evolucionTiempo || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="duracion" stroke="#7358F5" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-md p-6 mb-6">
+              <h2 className="text-lg font-semibold text-gray-800 mb-4">Precisión en Selección de Ítems</h2>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={metricas.precisionPorSesion || []}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="fecha" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="correctos" fill="#28A745" />
+                  <Bar dataKey="incorrectos" fill="#E08B8B" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </>
+        )}
+
+        {actividad !== 'cajero' && actividad !== 'mercado' && (
+          <div className="text-center text-gray-600 text-lg mt-10">
+            ⚠️ Aún no hay métricas individuales disponibles para esta actividad.
+          </div>
+        )}
       </div>
     </div>
   );

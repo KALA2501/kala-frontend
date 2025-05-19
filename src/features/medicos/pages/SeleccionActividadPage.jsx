@@ -12,21 +12,21 @@ const SeleccionActividadPage = () => {
   const actividades = [
     {
       id: 'cajero',
-      nombre: 'Actividad de Cajero',
+      nombre: 'Mi Tienda',
       icono: '🏦',
       bg: 'bg-[#A694E0]',
       hover: 'hover:bg-[#8269d0]',
     },
     {
       id: 'mercado',
-      nombre: 'Actividad de Mercado',
+      nombre: 'Ir de Compras',
       icono: '🛒',
       bg: 'bg-[#FFB347]',
       hover: 'hover:bg-[#e09b2f]',
     },
     {
       id: 'cubiertos',
-      nombre: 'Actividad de Cubiertos',
+      nombre: 'Hora de Comer',
       icono: '🍴',
       bg: 'bg-[#28A745]',
       hover: 'hover:bg-[#1e7e34]',
