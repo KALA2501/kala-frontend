@@ -38,7 +38,7 @@ const normalizeMetricas = (data) => {
 
 const DesempenoIndividualPage = () => {
   const { actividad } = useParams();
-  const [medicoId] = useState('M001'); // Más adelante lo extraes del token
+  const [medicoId] = useState('M003'); // Más adelante lo extraes del token
   const [pacientes, setPacientes] = useState([]);
   const [pacienteSeleccionado, setPacienteSeleccionado] = useState(null);
   const [metricas, setMetricas] = useState({});
