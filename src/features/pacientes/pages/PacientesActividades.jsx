@@ -15,6 +15,7 @@ const juegos = [
 const PacientesActividades = () => {
   const navigate = useNavigate();
   const [userId, setUserId] = useState(null);
+  const [gameUrl, setGameUrl] = useState(null); // URL to embed in iframe
 
   useEffect(() => {
     const auth = getAuth();
@@ -32,7 +33,7 @@ const PacientesActividades = () => {
             { headers: { Authorization: `Bearer ${token}` } }
           );
 
-          setUserId(idRes.data); // patient ID
+          setUserId(idRes.data);
         } catch (err) {
           console.error("Error fetching patient ID:", err);
         }
@@ -56,7 +57,7 @@ const PacientesActividades = () => {
       return;
     }
 
-    const socket = new WebSocket(`ws://${GAME_SERVER}/?userId=${userId}`);
+    const socket = new WebSocket(`ws://${GAME_SERVER.replace(/^https?:\/\//, '')}/?userId=${userId}`);
 
     socket.onopen = () => {
       console.log("✅ WebSocket conectado. Enviando juego a Kafka...");
@@ -67,7 +68,8 @@ const PacientesActividades = () => {
       const data = JSON.parse(event.data);
       if (data.type === 'session-start' && data.game === path) {
         console.log("🎮 Kafka confirmó el juego. Cargando Unity...");
-        window.location.href = `/games/${data.game}/index.html?userId=${userId}`;
+        const url = `${GAME_SERVER}/games/${data.game}/index.html?userId=${userId}`;
+        setGameUrl(url);
       }
     };
 
@@ -81,12 +83,12 @@ const PacientesActividades = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-8">
-      <h1 className="text-4xl font-bold text-purple mb-10">
+    <div className="min-h-screen bg-gray-100 flex flex-col items-center p-6">
+      <h1 className="text-4xl font-bold text-purple mb-8">
         Actividades Interactivas 🧠
       </h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 w-full max-w-5xl">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8 w-full max-w-5xl">
         {juegos.map((juego) => (
           <button
             key={juego.path}
@@ -99,6 +101,18 @@ const PacientesActividades = () => {
           </button>
         ))}
       </div>
+
+      {/* Iframe for Unity Game */}
+      {gameUrl && (
+        <div className="w-full max-w-5xl aspect-[16/10] shadow-xl border-4 border-purple rounded-xl overflow-hidden">
+          <iframe
+            src={gameUrl}
+            title="Juego Unity"
+            className="w-full h-full"
+            allowFullScreen
+          />
+        </div>
+      )}
     </div>
   );
 };
