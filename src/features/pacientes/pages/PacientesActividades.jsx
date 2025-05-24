@@ -4,6 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
 
 const API_GATEWAY = process.env.REACT_APP_GATEWAY;
+const GAME_SERVER = process.env.GAME_SERVER;
 
 const juegos = [
   { nombre: 'Hora de Comer', path: 'cubiertos', emoji: '🥄' },
@@ -50,7 +51,7 @@ const PacientesActividades = () => {
       return;
     }
 
-    const socket = new WebSocket(`ws://juegos-server:9094/?userId=${userId}`);
+    const socket = new WebSocket(`ws:${GAME_SERVER}]?userId=${userId}`);
 
     socket.onopen = () => {
       console.log("✅ WebSocket conectado. Enviando juego a Kafka...");
