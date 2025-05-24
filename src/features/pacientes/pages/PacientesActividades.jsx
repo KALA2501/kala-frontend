@@ -68,7 +68,7 @@ const PacientesActividades = () => {
       const data = JSON.parse(event.data);
       if (data.type === 'session-start' && data.game === path) {
         console.log("🎮 Kafka confirmó el juego. Cargando Unity...");
-        const url = `${GAME_SERVER}/games/${data.game}/index.html?userId=${userId}`;
+        const url = `http://${GAME_SERVER}/games/${data.game}/index.html?userId=${userId}`;
         setGameUrl(url);
       }
     };
