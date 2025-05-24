@@ -4,7 +4,7 @@ import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import axios from 'axios';
 
 const API_GATEWAY = process.env.REACT_APP_GATEWAY;
-const GAME_SERVER = process.env.GAME_SERVER;
+const GAME_SERVER = process.env.REACT_APP_GAME_SERVER;
 
 const juegos = [
   { nombre: 'Hora de Comer', path: 'cubiertos', emoji: '🥄' },
@@ -51,7 +51,12 @@ const PacientesActividades = () => {
       return;
     }
 
-    const socket = new WebSocket(`ws:${GAME_SERVER}]?userId=${userId}`);
+    if (!GAME_SERVER) {
+      console.error("⚠️ GAME_SERVER no está definido. Verifica tu archivo .env.");
+      return;
+    }
+
+    const socket = new WebSocket(`ws://${GAME_SERVER}/?userId=${userId}`);
 
     socket.onopen = () => {
       console.log("✅ WebSocket conectado. Enviando juego a Kafka...");
