@@ -237,40 +237,12 @@ const AdminPanelPage = () => {
 
   return (
     <div className="flex min-h-screen" style={{ backgroundColor: "#F8F8F8" }}>
-      <MenuLateral onLogout={cerrarSesion} />
+      <MenuLateral onLogout={cerrarSesion} activeTab={activeTab} setActiveTab={setActiveTab} />
+
 
       <div className="flex-1 flex flex-col">
         <AdminNavbar adminEmail={adminEmail} onLogout={cerrarSesion} />
 
-        {/* Header mejorado */}
-        <div className="bg-white shadow-lg" style={{ borderBottomColor: "#E5E5E5", borderBottomWidth: "1px" }}>
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-              <div className="flex items-center space-x-4">
-                <div className="p-3 rounded-xl shadow-md" style={{ backgroundColor: "#C7B8EA" }}>
-                  <span className="text-white text-2xl">🛡️</span>
-                </div>
-                <div>
-                  <h1 className="text-3xl font-bold" style={{ color: "#666666" }}>
-                    Panel de Administración
-                  </h1>
-                  <p style={{ color: "#999999" }}>Sistema de gestión médica KALA</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <span
-                  className="px-3 py-1 rounded-full text-sm font-medium"
-                  style={{
-                    backgroundColor: "#C7B8EA20",
-                    color: "#C7B8EA",
-                  }}
-                >
-                  {adminEmail}
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
 
         {/* Mensajes de alerta mejorados */}
         {mensaje && (

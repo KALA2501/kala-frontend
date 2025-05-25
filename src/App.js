@@ -23,6 +23,8 @@ import DesempenoIndividualPage from './features/medicos/pages/DesempenoIndividua
 import JuegoCubiertosPage from './features/pacientes/pages/Juegos/JuegoCubiertosPage';
 import JuegoCajeroPage from './features/pacientes/pages/Juegos/JuegoCajeroPage';
 import JuegoMercadoPage from './features/pacientes/pages/Juegos/JuegoMercadoPage';
+import CentroMedicoAgregarPaciente from './features/panel/pages/AgregarPacientePage';
+import CentroMedicoConfiguracionPage from './features/panel/pages/CentroMedicoConfiguracionPage';
 function App() {
   return (
     <Router>
@@ -51,6 +53,8 @@ function App() {
         <Route path="/jugar/cubiertos" element={<JuegoCubiertosPage />} />
         <Route path="/jugar/cajero" element={<JuegoCajeroPage />} />
         <Route path="/jugar/mercado" element={<JuegoMercadoPage />} />
+        <Route path="/centro/agregar-paciente" element={<CentroMedicoAgregarPaciente />} />
+        <Route path="/panel/configuracion" element={<CentroMedicoConfiguracionPage />} />
       </Routes>
     </Router>
   );
