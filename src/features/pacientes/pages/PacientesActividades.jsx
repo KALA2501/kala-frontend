@@ -104,11 +104,11 @@ const PacientesActividades = () => {
 
       {/* Iframe for Unity Game */}
       {gameUrl && (
-        <div className="w-full max-w-5xl aspect-[16/10] shadow-xl border-4 border-purple rounded-xl overflow-hidden">
+        <div className="relative w-full max-w-screen-2xl aspect-[16/10]">
           <iframe
             src={gameUrl}
             title="Juego Unity"
-            className="w-full h-full"
+            className="absolute top-0 left-0 w-full h-full rounded-xl border-4 border-purple shadow-2xl"
             allowFullScreen
           />
         </div>
