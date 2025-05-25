@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   FaHome,
@@ -9,6 +9,10 @@ import {
   FaChevronLeft,
   FaChevronRight,
 } from 'react-icons/fa';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import axios from 'axios';
+
+const API_GATEWAY = process.env.REACT_APP_GATEWAY;
 
 const opcionesMenu = [
   { etiqueta: 'Inicio', ruta: '/paciente/panel', icono: <FaHome /> },
@@ -20,8 +24,48 @@ const opcionesMenu = [
 const MenuLateralPaciente = ({ onLogout }) => {
   const location = useLocation();
   const [colapsado, setColapsado] = useState(false);
+  const [pacienteNombre, setPacienteNombre] = useState('');
+  const [pacienteImagen, setPacienteImagen] = useState('');
 
   const toggleColapsado = () => setColapsado(!colapsado);
+
+  useEffect(() => {
+    const auth = getAuth();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+
+          if (!token || token.split('.').length !== 3) {
+            throw new Error("Token JWT inválido o malformado");
+          }
+
+          // Obtener ID del paciente autenticado
+          const idRes = await axios.get(
+            `${API_GATEWAY}/api/pacientes/mi-perfil`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          const pacienteId = idRes.data;
+
+          // Obtener datos del paciente
+          const pacienteRes = await axios.get(
+            `${API_GATEWAY}/api/pacientes/${pacienteId}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+
+          const paciente = pacienteRes.data;
+          setPacienteNombre(paciente.nombre);
+          setPacienteImagen(paciente.urlImagen);
+        } catch (error) {
+          console.error('Error al cargar datos del paciente:', error);
+        }
+      } else {
+        console.error('Usuario no autenticado');
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   return (
     <aside
@@ -45,13 +89,15 @@ const MenuLateralPaciente = ({ onLogout }) => {
 
           <div className="flex flex-col items-center mb-4">
             <img
-              src="https://upload.wikimedia.org/wikipedia/en/5/5d/Shrek_%28character%29.png"
+              src={pacienteImagen || "/default-paciente.png"}
               alt="Paciente"
               className="w-20 h-20 rounded-full object-cover mb-2"
             />
             {!colapsado && (
               <>
-                <h2 className="text-base font-bold text-[#30028D]">Sherk</h2>
+                <h2 className="text-base font-bold text-[#30028D]">
+                  {pacienteNombre || 'Cargando...'}
+                </h2>
                 <span className="text-sm text-orange-500">Paciente</span>
               </>
             )}
