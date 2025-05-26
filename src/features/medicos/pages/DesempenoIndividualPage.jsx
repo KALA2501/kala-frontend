@@ -20,7 +20,7 @@ import {
   AreaChart,
 } from "recharts"
 
-const API_METRICAS = "http://localhost:9099/api/metricas"
+const API_METRICAS = "http://localhost:8080/api/metricas"
 
 // Componente de ayuda para desempeño individual
 const HelpSystem = ({ isOpen, onClose, currentStep, setCurrentStep, totalSteps }) => {

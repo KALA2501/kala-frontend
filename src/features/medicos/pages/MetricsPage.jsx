@@ -18,7 +18,7 @@ import {
   Legend,
 } from "recharts"
 
-const API_METRICAS = "http://localhost:9099/api/metricas"
+const API_METRICAS = "http://localhost:8080/api/metricas"
 
 // Componente de ayuda para métricas
 const HelpSystem = ({ isOpen, onClose, currentStep, setCurrentStep, totalSteps }) => {
