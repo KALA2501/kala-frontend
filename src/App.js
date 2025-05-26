@@ -25,6 +25,9 @@ import JuegoCajeroPage from './features/pacientes/pages/Juegos/JuegoCajeroPage';
 import JuegoMercadoPage from './features/pacientes/pages/Juegos/JuegoMercadoPage';
 import CentroMedicoAgregarPaciente from './features/panel/pages/AgregarPacientePage';
 import CentroMedicoConfiguracionPage from './features/panel/pages/CentroMedicoConfiguracionPage';
+import ConfiguracionMedicoPage from './features/medicos/pages/ConfiguracionMedicoPage';
+import PacientesPage from './features/medicos/pages/PacientesPage';
+import PacienteDetallePage from './features/medicos/pages/PacienteDetallePage';
 function App() {
   return (
     <Router>
@@ -55,6 +58,9 @@ function App() {
         <Route path="/jugar/mercado" element={<JuegoMercadoPage />} />
         <Route path="/centro/agregar-paciente" element={<CentroMedicoAgregarPaciente />} />
         <Route path="/panel/configuracion" element={<CentroMedicoConfiguracionPage />} />
+        <Route path="/medico-panel/configuracion" element={<ConfiguracionMedicoPage />} />
+        <Route path="/medico-pacientes" element={<PacientesPage />} />
+        <Route path="/pacientes/:pacienteId" element={<PacienteDetallePage />} />
       </Routes>
     </Router>
   );
